@@ -67,7 +67,7 @@ body,h1,h2,h3,p{margin:0;padding:0}
       --neon:   #00ff41;
       --gold:   #ffd700;
       --blue:   #00d4ff;
-      --red:    #ff2244;
+      --red:    #E61D25;
       --bg:     #04080a;
       --panel:  #0b1418;
       --panel2: #111e24;
@@ -183,11 +183,22 @@ body,h1,h2,h3,p{margin:0;padding:0}
 
     /* ── ATMOSPHERE: Pitch floor with lines ── */
     .pitch-floor {
-      position:fixed;bottom:0;left:0;right:0;height:300px;pointer-events:none;z-index:0;
+      position:fixed;bottom:0;left:0;right:0;height:320px;pointer-events:none;z-index:0;
       background:
-        radial-gradient(ellipse 45% 20% at 50% 100%, rgba(255,255,255,.05) 0%, transparent 100%),
-        linear-gradient(90deg, transparent 49.4%, rgba(255,255,255,.04) 49.4%, rgba(255,255,255,.04) 50.6%, transparent 50.6%),
-        radial-gradient(ellipse 100% 90% at 50% 100%, rgba(0,55,0,.45) 0%, rgba(0,30,0,.2) 50%, transparent 80%);
+        radial-gradient(ellipse 45% 20% at 50% 100%, rgba(255,255,255,.04) 0%, transparent 100%),
+        linear-gradient(90deg, transparent 49.4%, rgba(255,255,255,.05) 49.4%, rgba(255,255,255,.05) 50.6%, transparent 50.6%),
+        radial-gradient(ellipse 100% 90% at 50% 100%, rgba(60,172,59,.32) 0%, rgba(28,80,28,.16) 50%, transparent 80%);
+    }
+    /* center circle arc */
+    .pitch-floor::before {
+      content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+      width:250px;height:125px;
+      border:1px solid rgba(255,255,255,.05);border-bottom:none;border-radius:125px 125px 0 0;
+    }
+    /* touchline at base */
+    .pitch-floor::after {
+      content:'';position:absolute;bottom:0;left:6%;right:6%;height:1px;
+      background:rgba(255,255,255,.05);
     }
 
     /* ── ATMOSPHERE: Broadcast frame / vignette ── */
@@ -213,6 +224,12 @@ body,h1,h2,h3,p{margin:0;padding:0}
     .flare-3 { top:8%;left:55%;animation:flare-blink 11s ease-in-out infinite 2s; }
 
     /* ── ATMOSPHERE: Player slots (jersey shield style) ── */
+    @keyframes kick-in {
+      0%   { transform:scale(0) rotate(-50deg); opacity:0; }
+      55%  { transform:scale(1.4) rotate(6deg); opacity:1; }
+      80%  { transform:scale(1.05) rotate(-2deg); }
+      100% { transform:scale(1.18) translateY(-3px); opacity:1; }
+    }
     .player-slots { display:flex;gap:7px;justify-content:center;margin-top:8px;flex-wrap:wrap; }
     .player-slot {
       width:28px;height:32px;
@@ -220,7 +237,7 @@ body,h1,h2,h3,p{margin:0;padding:0}
       border:1.5px solid #162a18;background:linear-gradient(160deg,#060f07,#030a04);
       display:flex;align-items:center;justify-content:center;
       font-size:.75rem;color:#1a3020;
-      transition:all .4s cubic-bezier(.2,.8,.4,1);
+      transition:border-color .3s, background .3s, box-shadow .3s;
       font-family:'Bebas Neue',Impact,sans-serif;
       box-shadow:inset 0 0 6px rgba(0,0,0,.6);
     }
@@ -228,7 +245,7 @@ body,h1,h2,h3,p{margin:0;padding:0}
       background:linear-gradient(160deg,#002808,#001405);
       border-color:var(--neon);color:var(--neon);
       box-shadow:0 0 14px rgba(0,255,65,.7),0 0 28px rgba(0,255,65,.25),inset 0 0 8px rgba(0,255,65,.12);
-      transform:scale(1.18) translateY(-3px);
+      animation: kick-in .5s cubic-bezier(.2,.8,.4,1) forwards;
     }
 
     /* ── Enhanced hero title pulse ── */
@@ -267,9 +284,15 @@ body,h1,h2,h3,p{margin:0;padding:0}
       padding:.65rem 1.8rem;font-family:'Bebas Neue',Impact,sans-serif;font-size:1.15rem;
       letter-spacing:.1em;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;
     }
-    .btn-host:hover { background:var(--red);color:#fff;box-shadow:0 0 20px rgba(255,34,68,.5);transform:translateY(-2px); }
+    .btn-host::after {
+      content:'';position:absolute;inset:0;
+      background:radial-gradient(ellipse 90% 70% at 18% 50%, rgba(0,255,65,.16), transparent 65%);
+      opacity:0;transition:opacity .35s;pointer-events:none;
+    }
+    .btn-host:hover { background:var(--red);color:#fff;box-shadow:0 0 22px rgba(230,29,37,.55),0 0 40px rgba(0,255,65,.12);transform:translateY(-2px); }
+    .btn-host:hover::after { opacity:1; }
     .btn-host .lock-icon { display:inline-block;transition:transform .4s cubic-bezier(.2,.8,.4,1); }
-    .btn-host:hover .lock-icon { transform:rotate(-20deg) scale(1.3); }
+    .btn-host:hover .lock-icon { transform:rotate(-25deg) scale(1.35); }
 
     /* ── Scoreboard counter ── */
     .scoreboard {
@@ -381,7 +404,7 @@ body,h1,h2,h3,p{margin:0;padding:0}
       <button class="btn-host" onclick="App.openHostModal()"><span class="lock-icon">🔐</span> HOST LOGIN</button>
     </div>
     <div class="scoreboard mx-auto" style="max-width:260px;flex-shrink:0">
-      <div class="scoreboard-label">Players Registered</div>
+      <div class="scoreboard-label">Players In The Tunnel</div>
       <div class="scoreboard-num" id="landing-counter">0 / 8</div>
       <div class="scoreboard-bar">
         <div class="scoreboard-fill" id="landing-progress" style="width:0%"></div>
@@ -549,6 +572,8 @@ const WS_URL = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.h
 (function() {
   const c = document.getElementById('bgCanvas'), ctx = c.getContext('2d');
   const balls = [];
+  let _mx = 0, _my = 0;
+  document.addEventListener('mousemove', function(e){ _mx = (e.clientX/innerWidth - .5) * 16; _my = (e.clientY/innerHeight - .5) * 10; });
   function resize() { c.width = innerWidth; c.height = innerHeight; }
   resize(); window.addEventListener('resize', resize);
   for (let i=0;i<18;i++) balls.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4,size:12+Math.random()*28,opacity:.08+Math.random()*.18,rot:Math.random()*Math.PI*2,rs:(Math.random()-.5)*.015,type:i%3===0?'trophy':'ball'});
@@ -593,7 +618,8 @@ const WS_URL = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.h
     ctx.beginPath();ctx.rect(-s*.46,s*.62,s*.92,s*.11);ctx.stroke();
   }
   function draw(b) {
-    ctx.save();ctx.globalAlpha=b.opacity;ctx.translate(b.x,b.y);ctx.rotate(b.rot);
+    const pf = b.size / 40;
+    ctx.save();ctx.globalAlpha=b.opacity;ctx.translate(b.x + _mx * pf, b.y + _my * pf * .7);ctx.rotate(b.rot);
     if(b.type==='trophy') drawTrophy(ctx,b); else drawBall(ctx,b);
     ctx.restore();
   }
@@ -603,6 +629,18 @@ const WS_URL = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.h
     requestAnimationFrame(frame);
   }
   frame();
+})();
+
+/* ── Light beam parallax ── */
+(function(){
+  const beams = document.querySelectorAll('.light-beam, .flare');
+  document.addEventListener('mousemove', function(e){
+    const ox = (e.clientX/innerWidth - .5) * 22;
+    beams.forEach((b,i) => {
+      const f = .3 + (i % 3) * .25;
+      b.style.marginLeft = (ox * f).toFixed(1) + 'px';
+    });
+  });
 })();
 
 /* ================================================================
