@@ -316,7 +316,15 @@ async def websocket_endpoint(ws: WebSocket):
 def serve_frontend():
     html_path = Path(__file__).parent / "index.html"
     if html_path.exists():
-        return FileResponse(html_path, media_type="text/html")
+        return FileResponse(html_path, media_type="text/html", headers={
+            "Content-Security-Policy": (
+                "default-src 'self' 'unsafe-inline' 'unsafe-eval' "
+                "https://cdn.tailwindcss.com https://fonts.googleapis.com "
+                "https://fonts.gstatic.com; "
+                "img-src 'self' data:; "
+                "connect-src 'self' wss: ws: https:;"
+            )
+        })
     return HTMLResponse("<h1>Frontend not found</h1>", status_code=404)
 
 # ---------------------------------------------------------------------------
