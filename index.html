@@ -4,7 +4,62 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>WORLD CUP 2026 – PRIVATE DRAFT</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <style id="tw-minimal">
+/* ── Tailwind utility replacement (no CDN/eval needed) ── */
+*,::before,::after{box-sizing:border-box}
+body,h1,h2,h3,p{margin:0;padding:0}
+.flex{display:flex}.flex-col{flex-direction:column}.flex-1{flex:1 1 0%}
+.grid{display:grid}
+.grid-cols-1{grid-template-columns:repeat(1,minmax(0,1fr))}
+.grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.items-center{align-items:center}.items-start{align-items:flex-start}
+.justify-center{justify-content:center}.justify-between{justify-content:space-between}
+.gap-1{gap:.25rem}.gap-2{gap:.5rem}.gap-3{gap:.75rem}.gap-4{gap:1rem}
+.p-1{padding:.25rem}.p-3{padding:.75rem}.p-4{padding:1rem}.p-6{padding:1.5rem}
+.px-2{padding-left:.5rem;padding-right:.5rem}
+.px-4{padding-left:1rem;padding-right:1rem}
+.px-8{padding-left:2rem;padding-right:2rem}
+.py-1{padding-top:.25rem;padding-bottom:.25rem}
+.py-2{padding-top:.5rem;padding-bottom:.5rem}
+.py-3{padding-top:.75rem;padding-bottom:.75rem}
+.py-4{padding-top:1rem;padding-bottom:1rem}
+.py-6{padding-top:1.5rem;padding-bottom:1.5rem}
+.mb-1{margin-bottom:.25rem}.mb-2{margin-bottom:.5rem}.mb-3{margin-bottom:.75rem}
+.mb-4{margin-bottom:1rem}.mb-5{margin-bottom:1.25rem}.mb-6{margin-bottom:1.5rem}.mb-8{margin-bottom:2rem}
+.mt-1{margin-top:.25rem}.mt-2{margin-top:.5rem}.mt-3{margin-top:.75rem}
+.mt-4{margin-top:1rem}.mt-5{margin-top:1.25rem}.mt-6{margin-top:1.5rem}
+.mt-10{margin-top:2.5rem}.mt-12{margin-top:3rem}
+.mx-4{margin-left:1rem;margin-right:1rem}.mx-auto{margin-left:auto;margin-right:auto}
+.min-h-screen{min-height:100vh}.min-w-0{min-width:0}
+.w-full{width:100%}
+.max-w-sm{max-width:24rem}.max-w-md{max-width:28rem}
+.max-w-3xl{max-width:48rem}.max-w-5xl{max-width:64rem}
+.text-xs{font-size:.75rem;line-height:1rem}
+.text-sm{font-size:.875rem;line-height:1.25rem}
+.text-base{font-size:1rem;line-height:1.5rem}
+.text-lg{font-size:1.125rem;line-height:1.75rem}
+.text-xl{font-size:1.25rem;line-height:1.75rem}
+.text-2xl{font-size:1.5rem;line-height:2rem}
+.text-3xl{font-size:1.875rem;line-height:2.25rem}
+.text-4xl{font-size:2.25rem;line-height:2.5rem}
+.text-6xl{font-size:3.75rem;line-height:1}
+.font-bold{font-weight:700}
+.text-center{text-align:center}
+.uppercase{text-transform:uppercase}
+.tracking-widest{letter-spacing:.1em}
+.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rounded{border-radius:.25rem}
+.absolute{position:absolute}.relative{position:relative}.sticky{position:sticky}
+.top-0{top:0}.top-3{top:.75rem}.right-4{right:1rem}
+.z-10{z-index:10}.inset-0{inset:0}
+@media(min-width:640px){
+  .sm\:flex-row{flex-direction:row}
+  .sm\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .sm\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .sm\:items-center{align-items:center}
+}
+</style>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap');
 
@@ -18,8 +73,8 @@
       --panel2: #111e24;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Rajdhani', sans-serif; background: var(--bg); color: #e2e8f0; min-height: 100vh; overflow-x: hidden; }
-    h1, h2, .bebas { font-family: 'Bebas Neue', sans-serif; letter-spacing: .05em; }
+    body { font-family: 'Rajdhani', 'Trebuchet MS', sans-serif; background: var(--bg); color: #e2e8f0; min-height: 100vh; overflow-x: hidden; }
+    h1, h2, .bebas { font-family: 'Bebas Neue', Impact, 'Arial Narrow', sans-serif; letter-spacing: .05em; }
     #bgCanvas { position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: .35; }
     #confettiCanvas { position: fixed; inset: 0; pointer-events: none; z-index: 999; }
     .glow-green  { text-shadow: 0 0 8px var(--neon), 0 0 20px var(--neon), 0 0 40px var(--neon); }
@@ -46,7 +101,7 @@
 
     .btn-neon {
       background: transparent; border: 2px solid var(--neon); color: var(--neon);
-      padding: .75rem 2.5rem; font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem;
+      padding: .75rem 2.5rem; font-family: 'Bebas Neue', Impact, sans-serif; font-size: 1.3rem;
       letter-spacing: .1em; cursor: pointer; transition: all .25s; position: relative; overflow: hidden;
     }
     .btn-neon::before { content:''; position:absolute; inset:0; background:var(--neon); transform:scaleX(0); transform-origin:left; transition:transform .25s; z-index:-1; }
@@ -58,7 +113,7 @@
 
     .btn-gold {
       background: linear-gradient(135deg, var(--gold), #b8860b); color: #000; border: none;
-      padding: .75rem 2.5rem; font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem;
+      padding: .75rem 2.5rem; font-family: 'Bebas Neue', Impact, sans-serif; font-size: 1.3rem;
       letter-spacing: .1em; cursor: pointer; transition: all .25s; box-shadow: 0 0 20px var(--gold)66;
     }
     .btn-gold:hover { box-shadow: 0 0 40px var(--gold); transform: translateY(-2px); }
@@ -66,7 +121,7 @@
 
     .btn-red {
       background: transparent; border: 2px solid var(--red); color: var(--red);
-      padding: .5rem 1.5rem; font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem;
+      padding: .5rem 1.5rem; font-family: 'Bebas Neue', Impact, sans-serif; font-size: 1.1rem;
       letter-spacing: .08em; cursor: pointer; transition: all .2s;
     }
     .btn-red:hover { background: var(--red); color: #fff; }
@@ -75,8 +130,9 @@
     .panel-bright { background: var(--panel2); border: 1px solid #2a4060; }
     .prog-track { height: 8px; background: #1e3040; border-radius: 4px; overflow: hidden; }
     .prog-fill { height: 100%; background: linear-gradient(90deg, var(--neon), var(--blue)); border-radius: 4px; transition: width .5s cubic-bezier(.2,.8,.4,1); box-shadow: 0 0 8px var(--neon); }
+    .prog-fill-glow { box-shadow: 0 0 14px var(--neon), 0 0 28px var(--neon)66; }
 
-    .tier-badge { font-family:'Bebas Neue',sans-serif; letter-spacing:.08em; font-size:.75rem; padding:2px 8px; border-radius:2px; }
+    .tier-badge { font-family:'Bebas Neue',Impact,sans-serif; letter-spacing:.08em; font-size:.75rem; padding:2px 8px; border-radius:2px; }
     .t1{background:#ffd70022;color:var(--gold);border:1px solid var(--gold)66}
     .t2{background:#00d4ff22;color:var(--blue);border:1px solid var(--blue)66}
     .t3{background:#00ff4122;color:var(--neon);border:1px solid var(--neon)66}
@@ -86,30 +142,98 @@
 
     .modal-bg { position:fixed;inset:0;background:#000000cc;backdrop-filter:blur(4px);z-index:100;display:flex;align-items:center;justify-content:center; }
     .pitch-bg { background: radial-gradient(ellipse 60% 40% at 50% 50%,#0d2e0d,transparent 70%), repeating-linear-gradient(0deg,transparent,transparent 49px,#1a3a1a44 50px), repeating-linear-gradient(90deg,transparent,transparent 49px,#1a3a1a22 50px), #071007; border:2px solid #1a3a1a; border-radius:12px; }
-    .avatar { width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.3rem;border:2px solid;flex-shrink:0; }
-    .locked-stamp { position:absolute;top:-8px;right:-8px;background:var(--neon);color:#000;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.1em;padding:2px 6px;border-radius:2px;box-shadow:0 0 8px var(--neon); }
+    .avatar { width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',Impact,sans-serif;font-size:1.3rem;border:2px solid;flex-shrink:0; }
+    .locked-stamp { position:absolute;top:-8px;right:-8px;background:var(--neon);color:#000;font-family:'Bebas Neue',Impact,sans-serif;font-size:.65rem;letter-spacing:.1em;padding:2px 6px;border-radius:2px;box-shadow:0 0 8px var(--neon); }
     .team-card { transition:transform .2s,box-shadow .2s; }
     .team-card:hover { transform:translateY(-4px); }
     ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:#2a4060;border-radius:3px}
-    input { background:#0b1a20;border:1px solid #2a4060;color:#e2e8f0;padding:.6rem 1rem;width:100%;font-family:'Rajdhani',sans-serif;font-size:1rem;transition:border-color .2s,box-shadow .2s; }
+    input { background:#0b1a20;border:1px solid #2a4060;color:#e2e8f0;padding:.6rem 1rem;width:100%;font-family:'Rajdhani','Trebuchet MS',sans-serif;font-size:1rem;transition:border-color .2s,box-shadow .2s; }
     input:focus { outline:none;border-color:var(--neon);box-shadow:0 0 10px var(--neon)44; }
     input::placeholder { color:#4a6080; }
     .page { position:relative;z-index:1; }
     .hidden { display:none !important; }
 
     .hero-title { font-size:clamp(3rem,10vw,9rem);line-height:.9;background:linear-gradient(135deg,#fff 0%,var(--gold) 40%,var(--neon) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent; }
+    .draft-glow { text-shadow: 0 0 20px rgba(0,255,65,.5), 0 0 40px rgba(0,255,65,.2); -webkit-text-fill-color: var(--neon); }
 
     /* Connection status */
-    #conn-status { position:fixed;top:12px;right:12px;z-index:50;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:.1em;padding:4px 10px;border-radius:2px; }
+    #conn-status { position:fixed;top:12px;right:12px;z-index:50;font-family:'Bebas Neue',Impact,sans-serif;font-size:.8rem;letter-spacing:.1em;padding:4px 10px;border-radius:2px; }
     .conn-live   { background:#00ff4122;color:var(--neon);border:1px solid var(--neon)44; }
     .conn-off    { background:#ff224422;color:var(--red);border:1px solid var(--red)44; }
 
     /* Scanning overlay */
     .scanline-wrap { position:relative;overflow:hidden; }
-    .scanline-wrap::after { content:'';position:absolute;left:0;right:0;height:80px;background:linear-gradient(transparent,rgba(0,255,65,.04),transparent);animation:scanline 4s linear infinite;pointer-events:none; }
+    .scanline-wrap::after { content:'';position:absolute;left:0;right:0;height:80px;background:linear-gradient(transparent,rgba(0,255,65,.04),transparent);animation:scanline 4s linear infinite;pointer-events:none;z-index:2; }
+
+    /* ── ATMOSPHERE: Light beams ── */
+    @keyframes beam-sweep { 0%,100%{opacity:.06}50%{opacity:.16} }
+    .light-beam {
+      position:fixed;top:-120px;width:4px;height:200vh;
+      background:linear-gradient(180deg,transparent 0%,rgba(0,255,65,.14) 30%,rgba(0,255,65,.06) 70%,transparent 100%);
+      transform-origin:top center;pointer-events:none;z-index:0;border-radius:2px;
+    }
+    .light-beam:nth-child(1) { left:18%;transform:rotate(-14deg);animation:beam-sweep 6s ease-in-out infinite; }
+    .light-beam.beam-gold { left:50%;width:6px;background:linear-gradient(180deg,transparent 0%,rgba(255,215,0,.12) 30%,rgba(255,215,0,.05) 70%,transparent 100%);transform:rotate(-2deg);animation:beam-sweep 9s ease-in-out infinite 1.5s; }
+    .light-beam.beam-3 { left:80%;transform:rotate(12deg);animation:beam-sweep 7s ease-in-out infinite 3s; }
+
+    /* ── ATMOSPHERE: Pitch floor glow ── */
+    .pitch-floor {
+      position:fixed;bottom:0;left:0;right:0;height:220px;
+      background:radial-gradient(ellipse 90% 70% at 50% 100%,rgba(0,60,0,.3),transparent);
+      pointer-events:none;z-index:0;
+    }
+
+    /* ── ATMOSPHERE: Broadcast frame ── */
+    .broadcast-frame {
+      position:fixed;inset:0;pointer-events:none;z-index:0;
+      box-shadow:inset 0 0 120px rgba(0,0,0,.6),inset 0 0 40px rgba(0,20,0,.4);
+      border:1px solid rgba(0,255,65,.04);
+    }
+
+    /* ── ATMOSPHERE: Trophy glow pulse ── */
+    @keyframes trophy-pulse { 0%,100%{filter:drop-shadow(0 0 22px #ffd70055)}50%{filter:drop-shadow(0 0 48px #ffd700bb)} }
+    .trophy-glow-pulse { animation:trophy-pulse 3s ease-in-out infinite; display:inline-block; }
+
+    /* ── ATMOSPHERE: Player slots ── */
+    .player-slots { display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap; }
+    .player-slot {
+      width:30px;height:30px;border-radius:50%;border:1.5px solid #2a4060;
+      display:flex;align-items:center;justify-content:center;
+      font-size:.8rem;color:#2a4060;transition:all .4s cubic-bezier(.2,.8,.4,1);
+      font-family:'Bebas Neue',Impact,sans-serif;
+    }
+    .player-slot.filled {
+      background:rgba(0,255,65,.15);border-color:var(--neon);color:var(--neon);
+      box-shadow:0 0 10px rgba(0,255,65,.5),0 0 20px rgba(0,255,65,.2);
+      transform:scale(1.1);
+    }
+
+    /* ── ATMOSPHERE: Draw loading screen ── */
+    @keyframes draw-spin { to{transform:rotate(360deg)} }
+    @keyframes draw-pulse-text { 0%,100%{opacity:1}50%{opacity:.5} }
+    #draw-loading {
+      position:fixed;inset:0;background:rgba(0,0,0,.92);backdrop-filter:blur(8px);
+      z-index:500;display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+    }
+    #draw-loading.active { display:flex; }
+    .draw-trophy { font-size:5rem;animation:draw-spin 1.2s linear infinite;display:inline-block;line-height:1; }
+    .draw-text { font-family:'Bebas Neue',Impact,sans-serif;font-size:2.2rem;color:var(--gold);letter-spacing:.15em;text-shadow:0 0 20px var(--gold); animation:draw-pulse-text 1.5s ease-in-out infinite; }
+    .draw-sub { font-size:.8rem;color:#5a8aaa;letter-spacing:.25em;text-transform:uppercase; }
   </style>
 </head>
 <body class="scanline-wrap">
+
+<div class="light-beam"></div>
+<div class="light-beam beam-gold"></div>
+<div class="light-beam beam-3"></div>
+<div class="pitch-floor"></div>
+<div class="broadcast-frame"></div>
+<canvas id="particle-canvas" style="position:fixed;inset:0;pointer-events:none;z-index:3"></canvas>
+<div id="draw-loading">
+  <span class="draw-trophy">🏆</span>
+  <div class="draw-text bebas">THE DRAW IS HAPPENING...</div>
+  <div class="draw-sub">Fate decides all</div>
+</div>
 
 <canvas id="bgCanvas"></canvas>
 <canvas id="confettiCanvas"></canvas>
@@ -118,7 +242,7 @@
 <!-- ═══ LANDING ══════════════════════════════════════════════════ -->
 <section id="page-landing" class="page">
   <div class="min-h-screen flex flex-col items-center justify-center text-center px-4">
-    <div class="mb-6">
+    <div class="mb-6 trophy-glow-pulse">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 215" width="200" height="215" style="filter:drop-shadow(0 0 22px #ffd70066)">
         <defs>
           <linearGradient id="h26a" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -135,46 +259,48 @@
             <stop offset="100%" stop-color="#7a5500"/>
           </radialGradient>
         </defs>
-        <!-- Black rounded background -->
         <rect width="200" height="215" rx="16" fill="#090909"/>
-        <!-- "2" and "6" — bold white -->
         <text x="5" y="160" font-size="132" font-weight="900" font-family="Impact,'Arial Black',sans-serif" fill="white">2</text>
         <text x="105" y="160" font-size="132" font-weight="900" font-family="Impact,'Arial Black',sans-serif" fill="white">6</text>
-        <!-- Trophy body: two figures converging to column, centered at x=100 -->
         <path d="M 90,26 C 82,32 68,48 68,65 C 68,75 74,84 82,91 C 86,95 87,100 88,106 L 88,122 L 112,122 L 112,106 C 113,100 114,95 118,91 C 126,84 132,75 132,65 C 132,48 118,32 110,26 Z" fill="url(#h26a)"/>
-        <!-- Center groove — shadow between the two figures -->
         <rect x="97" y="28" width="6" height="80" fill="#2a1800" opacity="0.6"/>
-        <!-- Neck/stem -->
         <rect x="87" y="122" width="26" height="10" rx="2" fill="url(#h26a)"/>
-        <!-- Malachite green band -->
         <rect x="79" y="132" width="42" height="10" rx="2" fill="#1e6845"/>
         <line x1="79" y1="134.5" x2="121" y2="134.5" stroke="#ffd700" stroke-width="1" opacity="0.4"/>
         <line x1="79" y1="140.5" x2="121" y2="140.5" stroke="#ffd700" stroke-width="1" opacity="0.4"/>
-        <!-- Base plates -->
         <rect x="75" y="142" width="50" height="8" rx="3" fill="url(#h26a)"/>
         <rect x="69" y="150" width="62" height="8" rx="4" fill="url(#h26b)"/>
-        <!-- Globe on top (rendered above figure arms) -->
         <circle cx="100" cy="36" r="20" fill="url(#h26c)" stroke="#9a7200" stroke-width="0.8"/>
         <ellipse cx="100" cy="36" rx="20" ry="6" fill="none" stroke="#9a7200" stroke-width="0.7" opacity="0.55"/>
         <ellipse cx="100" cy="36" rx="7" ry="20" fill="none" stroke="#9a7200" stroke-width="0.7" opacity="0.55"/>
         <ellipse cx="91" cy="28" rx="5" ry="4" fill="white" opacity="0.25"/>
-        <!-- FIFA text -->
         <text x="100" y="196" text-anchor="middle" font-size="20" font-weight="700" font-family="'Arial Black',Arial,sans-serif" fill="white" letter-spacing="3">FIFA</text>
         <text x="179" y="200" font-size="7" fill="white" opacity="0.75">™</text>
       </svg>
     </div>
     <div class="mb-2 text-sm tracking-widest uppercase" style="color:var(--blue)">⚡ Private Tournament · 8 Players · Fair Draw</div>
-    <h1 class="hero-title bebas">WORLD CUP<br>2026<br><span style="font-size:55%">PRIVATE DRAFT</span></h1>
-    <p class="mt-6 text-lg max-w-md mx-auto" style="color:#7a9ab8">48 nations. 6 tiers. One champion.<br>Every squad decided by fate.</p>
+    <h1 class="hero-title bebas">WORLD CUP<br>2026<br><span class="draft-glow" style="font-size:60%">PRIVATE DRAFT</span></h1>
+    <p class="mt-6 text-lg max-w-md mx-auto" style="color:#7a9ab8">48 nations. 6 tiers. One champion. Every squad decided by fate.</p>
+    <p class="mt-1 text-sm tracking-widest uppercase" style="color:#3a5a70">🇺🇸 USA &nbsp;·&nbsp; 🇲🇽 Mexico &nbsp;·&nbsp; 🇨🇦 Canada</p>
     <div class="mt-10 flex flex-col sm:flex-row gap-4 items-center justify-center">
-      <button class="btn-neon pulse-neon" onclick="App.openRegisterModal()">⚡ JOIN THE BATTLE</button>
+      <button class="btn-neon pulse-neon" onclick="App.openRegisterModal()" onmouseenter="spawnParticles(this)">⚡ JOIN THE BATTLE</button>
       <button class="btn-red" onclick="App.openHostModal()">🔐 HOST LOGIN</button>
     </div>
     <div class="mt-12">
       <div class="text-xs uppercase tracking-widest mb-2" style="color:#3a5a70">Players Registered</div>
       <div class="text-3xl font-bold bebas" id="landing-counter" style="color:var(--neon)">0 / 8</div>
       <div class="prog-track mt-2 mx-auto" style="width:200px">
-        <div class="prog-fill" id="landing-progress" style="width:0%"></div>
+        <div class="prog-fill prog-fill-glow" id="landing-progress" style="width:0%"></div>
+      </div>
+      <div class="player-slots" id="player-slots">
+        <div class="player-slot" id="slot-0">·</div>
+        <div class="player-slot" id="slot-1">·</div>
+        <div class="player-slot" id="slot-2">·</div>
+        <div class="player-slot" id="slot-3">·</div>
+        <div class="player-slot" id="slot-4">·</div>
+        <div class="player-slot" id="slot-5">·</div>
+        <div class="player-slot" id="slot-6">·</div>
+        <div class="player-slot" id="slot-7">·</div>
       </div>
     </div>
   </div>
@@ -216,7 +342,7 @@
         <div class="text-sm mt-1" style="color:#5a8aaa"><span id="dash-counter" class="font-bold" style="color:var(--neon)">0</span> / 8 players registered</div>
       </div>
       <div id="draw-zone" class="hidden text-center">
-        <button id="btn-draw" class="btn-gold text-xl px-8 py-4 pulse-gold" onclick="App.triggerDraw()" disabled>🎲 DRAW THE SQUADS</button>
+        <button id="btn-draw" class="btn-gold pulse-gold" style="font-size:1.2rem;padding:.75rem 2rem" onclick="App.triggerDraw()" disabled>🎲 DRAW THE SQUADS</button>
         <div id="draw-hint" class="text-xs mt-2" style="color:#5a8aaa">All 8 players must register first</div>
       </div>
       <div id="view-squad-zone" class="hidden">
@@ -285,7 +411,7 @@
 </div>
 
 <!-- ═══ TOAST ══════════════════════════════════════════════════════ -->
-<div id="toast" class="hidden" style="position:fixed;bottom:2rem;right:2rem;z-index:200;background:var(--panel2);border:1px solid var(--neon)44;padding:.75rem 1.5rem;border-radius:4px;font-family:'Rajdhani',sans-serif;font-size:1rem;color:var(--neon);box-shadow:0 0 20px var(--neon)22;max-width:320px;"></div>
+<div id="toast" class="hidden" style="position:fixed;bottom:2rem;right:2rem;z-index:200;background:var(--panel2);border:1px solid var(--neon)44;padding:.75rem 1.5rem;border-radius:4px;font-family:'Rajdhani','Trebuchet MS',sans-serif;font-size:1rem;color:var(--neon);box-shadow:0 0 20px var(--neon)22;max-width:320px;"></div>
 
 <script>
 /* ================================================================
@@ -320,7 +446,6 @@ const RIVALRY_LINES = [
   "{a} vs {b}: ⚽ Group stage nightmare if these two meet.",
 ];
 
-// Detect API base URL — works locally and on Railway
 const API = window.location.origin;
 const WS_URL = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/ws`;
 
@@ -336,17 +461,13 @@ const WS_URL = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.h
   function drawBall(ctx,b) {
     const s=b.size;
     ctx.beginPath();ctx.arc(0,0,s,0,Math.PI*2);ctx.strokeStyle='#00ff41';ctx.lineWidth=1.2;ctx.stroke();
-    // center pentagon
     ctx.beginPath();for(let i=0;i<5;i++){const a=(i/5)*Math.PI*2-Math.PI/2;i?ctx.lineTo(Math.cos(a)*s*.38,Math.sin(a)*s*.38):ctx.moveTo(Math.cos(a)*s*.38,Math.sin(a)*s*.38);}ctx.closePath();ctx.strokeStyle='#00ff41';ctx.lineWidth=.7;ctx.stroke();
-    // spokes to edge
     for(let i=0;i<5;i++){const a=(i/5)*Math.PI*2-Math.PI/2;ctx.beginPath();ctx.moveTo(Math.cos(a)*s*.38,Math.sin(a)*s*.38);ctx.lineTo(Math.cos(a)*s*.85,Math.sin(a)*s*.85);ctx.strokeStyle='#00ff41';ctx.lineWidth=.6;ctx.stroke();}
   }
   function drawTrophy(ctx,b) {
     const s=b.size;
     ctx.strokeStyle='#ffd700';ctx.lineWidth=1.1;
-    // globe
     ctx.beginPath();ctx.arc(0,-s*.82,s*.33,0,Math.PI*2);ctx.stroke();
-    // body: left figure arc then right figure arc (mirrored)
     ctx.beginPath();
     ctx.moveTo(-s*.18,-s*.42);
     ctx.bezierCurveTo(-s*.58,-s*.28,-s*.65,s*.02,-s*.32,s*.18);
@@ -355,7 +476,6 @@ const WS_URL = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.h
     ctx.bezierCurveTo(s*.1,s*.38,s*.18,s*.28,s*.32,s*.18);
     ctx.bezierCurveTo(s*.65,s*.02,s*.58,-s*.28,s*.18,-s*.42);
     ctx.stroke();
-    // base
     ctx.beginPath();ctx.rect(-s*.38,s*.48,s*.76,s*.14);ctx.stroke();
     ctx.beginPath();ctx.rect(-s*.46,s*.62,s*.92,s*.11);ctx.stroke();
   }
@@ -415,11 +535,9 @@ const App = {
   _hostVerified: false,
   _squadViewId: null,
 
-  // ── Session ──────────────────────────────────────────────────
   get currentPlayer() { try{return JSON.parse(sessionStorage.getItem('wc_player')||'null');}catch{return null;} },
   set currentPlayer(p) { p ? sessionStorage.setItem('wc_player',JSON.stringify(p)) : sessionStorage.removeItem('wc_player'); },
 
-  // ── Init ─────────────────────────────────────────────────────
   async init() {
     this.connectWS();
     const cp = this.currentPlayer;
@@ -427,7 +545,6 @@ const App = {
     this.showPage('page-landing');
   },
 
-  // ── Pages ─────────────────────────────────────────────────────
   showPage(id) {
     ['page-landing','page-dashboard','page-squad'].forEach(p=>document.getElementById(p).classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
@@ -444,17 +561,11 @@ const App = {
     this.renderSquad(player, squad);
   },
 
-  // ── WebSocket ─────────────────────────────────────────────────
   connectWS() {
     const ws = new WebSocket(WS_URL);
     this._ws = ws;
     const connEl = document.getElementById('conn-status');
-
-    ws.onopen = () => {
-      connEl.textContent='● LIVE';
-      connEl.className='conn-live';
-      this._wsRetry=1000;
-    };
+    ws.onopen = () => { connEl.textContent='● LIVE'; connEl.className='conn-live'; this._wsRetry=1000; };
     ws.onmessage = (e) => {
       try {
         const msg = JSON.parse(e.data);
@@ -463,8 +574,7 @@ const App = {
       } catch{}
     };
     ws.onclose = () => {
-      connEl.textContent='● OFFLINE';
-      connEl.className='conn-off';
+      connEl.textContent='● OFFLINE'; connEl.className='conn-off';
       setTimeout(()=>this.connectWS(), this._wsRetry);
       this._wsRetry = Math.min(this._wsRetry*2, 15000);
     };
@@ -473,26 +583,22 @@ const App = {
 
   onStateUpdate(type) {
     const n = this._state.count;
-    // Update landing counter
     document.getElementById('landing-counter').textContent=`${n} / 8`;
+    for(let i=0;i<8;i++){const s=document.getElementById('slot-'+i);if(s){s.className='player-slot'+(i<n?' filled':'');s.textContent=i<n?'✓':'·';}}
     document.getElementById('landing-progress').style.width=`${(n/8)*100}%`;
-
-    // Refresh current page
     if (!document.getElementById('page-dashboard').classList.contains('hidden')) this.renderDashboard();
     if (!document.getElementById('page-squad').classList.contains('hidden') && this._squadViewId) {
       const player = this._state.players.find(p=>p.id===this._squadViewId);
       const squad = this._state.squads[this._squadViewId];
       if (player && squad) this.renderSquad(player, squad);
     }
-
-    // Confetti on draw complete
     if (type === 'draw_complete') {
+      document.getElementById('draw-loading').classList.remove('active');
       toast("🏆 SQUADS DRAWN! Destiny decided!", 6000);
       Confetti.burst();
     }
   },
 
-  // ── Modals ────────────────────────────────────────────────────
   openRegisterModal() {
     document.getElementById('modal-register').classList.remove('hidden');
     document.getElementById('reg-name').value='';
@@ -508,7 +614,6 @@ const App = {
   },
   closeModal(id) { document.getElementById(id).classList.add('hidden'); },
 
-  // ── Register / Login ──────────────────────────────────────────
   async register() {
     const name=document.getElementById('reg-name').value.trim();
     const email=document.getElementById('reg-email').value.trim();
@@ -543,11 +648,8 @@ const App = {
   },
   logout() { this.currentPlayer=null; this._hostVerified=false; this.showPage('page-landing'); },
 
-  // ── Host ──────────────────────────────────────────────────────
   verifyHost() {
     const pass=document.getElementById('host-pass').value;
-    const err=document.getElementById('host-error');
-    // We don't expose the password client-side — draw API will validate it
     this._hostPass=pass;
     this._hostVerified=true;
     this.closeModal('modal-host');
@@ -569,18 +671,23 @@ const App = {
     } catch{toast("❌ Reset failed");}
   },
 
-  // ── Draw ──────────────────────────────────────────────────────
   async triggerDraw() {
     if(this._state.count<8){toast("Need 8 players first!");return;}
     if(!confirm('🎲 DRAW THE SQUADS?\n\nRandomly assign 6 teams to each player.\nThis cannot be undone!'))return;
+    document.getElementById('draw-loading').classList.add('active');
     try {
       const r=await fetch(`${API}/api/draw`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:this._hostPass||''})});
-      if(!r.ok){const b=await r.json();toast(`❌ ${b.detail}`);return;}
-      // WS will broadcast draw_complete — confetti fires there
-    } catch{toast("❌ Draw failed — check connection");}
+      if(!r.ok){
+        document.getElementById('draw-loading').classList.remove('active');
+        const b=await r.json();toast(`❌ ${b.detail}`);return;
+      }
+      // draw-loading hides when WS broadcasts draw_complete
+    } catch{
+      document.getElementById('draw-loading').classList.remove('active');
+      toast("❌ Draw failed — check connection");
+    }
   },
 
-  // ── Dashboard render ──────────────────────────────────────────
   renderDashboard() {
     const {players, squads, draw_done, count} = this._state;
     const cp = this.currentPlayer;
@@ -648,7 +755,6 @@ const App = {
     }
   },
 
-  // ── Squad render ──────────────────────────────────────────────
   renderSquad(player, squad) {
     document.getElementById('squad-player-name').textContent=player.name;
     document.getElementById('squad-initial').textContent=player.avatar_initial;
@@ -658,7 +764,7 @@ const App = {
         <div class="tier-badge ${meta.cls} mb-2">${meta.short} · ${meta.label}</div>
         <div class="text-4xl mb-2">${FLAGS[team]||'🏳️'}</div>
         <div class="text-base font-bold" style="color:#e2e8f0">${team}</div>
-        <div style="display:inline-block;background:var(--neon);color:#000;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.1em;padding:2px 6px;border-radius:2px;margin-top:6px;box-shadow:0 0 8px var(--neon)">LOCKED IN</div>
+        <div style="display:inline-block;background:var(--neon);color:#000;font-family:'Bebas Neue',Impact,sans-serif;font-size:.65rem;letter-spacing:.1em;padding:2px 6px;border-radius:2px;margin-top:6px;box-shadow:0 0 8px var(--neon)">LOCKED IN</div>
       </div>`;
     }).join('');
 
@@ -677,7 +783,6 @@ const App = {
   },
 };
 
-/* keyboard shortcuts */
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape') document.querySelectorAll('.modal-bg').forEach(m=>m.classList.add('hidden'));
   if(e.key==='Enter'){
@@ -689,5 +794,61 @@ document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>
 
 App.init();
 </script>
+
+<script>
+/* ── Particle canvas ── */
+const pCanvas=document.getElementById('particle-canvas'),pCtx=pCanvas.getContext('2d');
+let particles=[];
+function resizePC(){pCanvas.width=innerWidth;pCanvas.height=innerHeight;}
+resizePC();window.addEventListener('resize',resizePC);
+function spawnParticles(el){
+  const r=el.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+  for(let i=0;i<18;i++){
+    const a=Math.random()*Math.PI*2,sp=1.5+Math.random()*3;
+    particles.push({x:cx,y:cy,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1.5,life:1,decay:.025+Math.random()*.02,size:2+Math.random()*3,color:Math.random()>.5?'#00ff41':'#ffd700',shape:Math.random()>.5?'ball':'star'});
+  }
+}
+function animateParticles(){
+  pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);
+  particles=particles.filter(p=>p.life>0);
+  particles.forEach(p=>{
+    p.x+=p.vx;p.y+=p.vy;p.vy+=.1;p.life-=p.decay;
+    pCtx.save();pCtx.globalAlpha=Math.max(0,p.life);pCtx.fillStyle=p.color;pCtx.translate(p.x,p.y);
+    if(p.shape==='ball'){pCtx.beginPath();pCtx.arc(0,0,p.size,0,Math.PI*2);pCtx.fill();}
+    else{pCtx.beginPath();for(let i=0;i<4;i++){const a=i*Math.PI/2;pCtx.lineTo(Math.cos(a)*p.size,Math.sin(a)*p.size);pCtx.lineTo(Math.cos(a+Math.PI/4)*p.size*.4,Math.sin(a+Math.PI/4)*p.size*.4);}pCtx.closePath();pCtx.fill();}
+    pCtx.restore();
+  });
+  requestAnimationFrame(animateParticles);
+}
+animateParticles();
+
+/* ── Sound toggle ── */
+let soundEnabled=false;
+function playClick(){
+  if(!soundEnabled)return;
+  try{
+    const c=new(window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();
+    o.connect(g);g.connect(c.destination);o.type='sine';
+    o.frequency.setValueAtTime(440,c.currentTime);
+    o.frequency.exponentialRampToValueAtTime(220,c.currentTime+.08);
+    g.gain.setValueAtTime(.08,c.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.12);
+    o.start();o.stop(c.currentTime+.12);
+  }catch(e){}
+}
+document.querySelectorAll('.btn-neon,.btn-red,.btn-gold').forEach(b=>b.addEventListener('click',playClick));
+const sb=document.createElement('button');
+sb.title='Toggle sound';
+sb.style.cssText='position:fixed;bottom:16px;right:16px;z-index:50;background:#0a1a22;border:1px solid #1e3040;border-radius:50%;width:36px;height:36px;font-size:14px;cursor:pointer;color:#3a5a70;transition:color .2s,border-color .2s';
+sb.textContent='🔇';
+sb.onclick=()=>{
+  soundEnabled=!soundEnabled;
+  sb.textContent=soundEnabled?'🔊':'🔇';
+  sb.style.color=soundEnabled?'var(--neon)':'#3a5a70';
+  sb.style.borderColor=soundEnabled?'var(--neon)':'#1e3040';
+};
+document.body.appendChild(sb);
+</script>
+
 </body>
 </html>
