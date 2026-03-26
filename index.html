@@ -213,9 +213,9 @@ body,h1,h2,h3,p{margin:0;padding:0}
     .flare-3 { top:8%;left:55%;animation:flare-blink 11s ease-in-out infinite 2s; }
 
     /* ── ATMOSPHERE: Player slots (jersey shield style) ── */
-    .player-slots { display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap; }
+    .player-slots { display:flex;gap:7px;justify-content:center;margin-top:8px;flex-wrap:wrap; }
     .player-slot {
-      width:34px;height:38px;
+      width:28px;height:32px;
       border-radius:6px 6px 40% 40%;
       border:1.5px solid #162a18;background:linear-gradient(160deg,#060f07,#030a04);
       display:flex;align-items:center;justify-content:center;
@@ -275,14 +275,14 @@ body,h1,h2,h3,p{margin:0;padding:0}
     .scoreboard {
       background:linear-gradient(160deg,rgba(0,8,4,.95),rgba(0,16,8,.9));
       border:1px solid #1a3a1a;border-radius:8px;
-      padding:18px 28px;text-align:center;margin-top:20px;
+      padding:10px 20px;text-align:center;margin-top:0;
       box-shadow:0 0 30px rgba(0,255,65,.07),inset 0 0 30px rgba(0,0,0,.5);
       position:relative;overflow:hidden;
     }
     .scoreboard::before { content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,255,65,.3),transparent); }
     .scoreboard-label { font-family:'Bebas Neue',Impact,sans-serif;font-size:.7rem;letter-spacing:.22em;color:#2a5030;margin-bottom:4px; }
-    .scoreboard-num { font-family:'Bebas Neue',Impact,sans-serif;font-size:3.2rem;line-height:1;color:var(--neon);text-shadow:0 0 20px var(--neon),0 0 50px rgba(0,255,65,.3); }
-    .scoreboard-bar { height:5px;background:#050e06;border-radius:3px;overflow:hidden;margin-top:10px;position:relative; }
+    .scoreboard-num { font-family:'Bebas Neue',Impact,sans-serif;font-size:2.4rem;line-height:1;color:var(--neon);text-shadow:0 0 20px var(--neon),0 0 50px rgba(0,255,65,.3); }
+    .scoreboard-bar { height:5px;background:#050e06;border-radius:3px;overflow:hidden;margin-top:6px;position:relative; }
     .scoreboard-fill { height:100%;background:linear-gradient(90deg,#004d14,var(--neon));border-radius:3px;transition:width .6s cubic-bezier(.2,.8,.4,1);box-shadow:0 0 10px var(--neon),0 0 20px rgba(0,255,65,.4);position:relative; }
     .scoreboard-fill::after { content:'';position:absolute;right:0;top:0;bottom:0;width:3px;background:rgba(255,255,255,.7);border-radius:2px; }
 
@@ -323,9 +323,9 @@ body,h1,h2,h3,p{margin:0;padding:0}
 
 <!-- ═══ LANDING ══════════════════════════════════════════════════ -->
 <section id="page-landing" class="page">
-  <div class="min-h-screen flex flex-col items-center justify-center text-center px-4">
-    <div class="mb-6 trophy-glow-pulse">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 215" width="200" height="215" style="filter:drop-shadow(0 0 22px #ffd70066)">
+  <div class="flex flex-col items-center justify-center text-center px-4" style="height:100vh;overflow:hidden;gap:0;padding-top:8px;padding-bottom:8px;justify-content:space-evenly">
+    <div class="trophy-glow-pulse" style="flex-shrink:0">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 215" style="width:auto;height:min(160px,18vh);filter:drop-shadow(0 0 22px #ffd70066)">
         <defs>
           <linearGradient id="h26a" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stop-color="#6b4400"/><stop offset="28%" stop-color="#d49010"/>
@@ -360,23 +360,27 @@ body,h1,h2,h3,p{margin:0;padding:0}
         <text x="179" y="200" font-size="7" fill="white" opacity="0.75">™</text>
       </svg>
     </div>
-    <div class="mb-2 text-sm tracking-widest uppercase" style="color:var(--blue)">⚡ Private Tournament · 8 Players · Fair Draw</div>
-    <h1 class="hero-title bebas">WORLD CUP<br>2026<br><span class="draft-glow" style="font-size:60%">PRIVATE DRAFT</span></h1>
-    <p class="mt-6 text-lg max-w-md mx-auto" style="color:#7a9ab8">48 nations. 6 tiers. One champion. Every squad decided by fate.</p>
-    <div class="host-nations">
-      <span class="host-flag"><span class="hf-emoji">🇺🇸</span><span class="hf-name">USA</span></span>
-      <span class="host-sep">·</span>
-      <span class="host-flag"><span class="hf-emoji">🇲🇽</span><span class="hf-name">Mexico</span></span>
-      <span class="host-sep">·</span>
-      <span class="host-flag"><span class="hf-emoji">🇨🇦</span><span class="hf-name">Canada</span></span>
+    <div style="flex-shrink:0">
+      <div class="text-sm tracking-widest uppercase" style="color:var(--blue);margin-bottom:4px">⚡ Private Tournament · 8 Players · Fair Draw</div>
+      <h1 class="hero-title bebas" style="font-size:clamp(2.2rem,7vw,7rem)">WORLD CUP<br>2026<br><span class="draft-glow" style="font-size:60%">PRIVATE DRAFT</span></h1>
     </div>
-    <div class="mt-10 flex flex-col sm:flex-row gap-4 items-center justify-center">
+    <div style="flex-shrink:0">
+      <p class="text-base max-w-md mx-auto" style="color:#7a9ab8">48 nations. 6 tiers. One champion. Every squad decided by fate.</p>
+      <div class="host-nations" style="margin-top:6px">
+        <span class="host-flag"><span class="hf-emoji">🇺🇸</span><span class="hf-name">USA</span></span>
+        <span class="host-sep">·</span>
+        <span class="host-flag"><span class="hf-emoji">🇲🇽</span><span class="hf-name">Mexico</span></span>
+        <span class="host-sep">·</span>
+        <span class="host-flag"><span class="hf-emoji">🇨🇦</span><span class="hf-name">Canada</span></span>
+      </div>
+    </div>
+    <div class="flex flex-col sm:flex-row gap-3 items-center justify-center" style="flex-shrink:0">
       <button class="btn-battle pulse-neon" onclick="App.openRegisterModal()" onmouseenter="spawnParticles(this)">
         <span class="btn-inner"><span>⚡</span><span class="ball-roll">⚽</span> JOIN THE BATTLE</span>
       </button>
       <button class="btn-host" onclick="App.openHostModal()"><span class="lock-icon">🔐</span> HOST LOGIN</button>
     </div>
-    <div class="scoreboard mx-auto" style="max-width:260px">
+    <div class="scoreboard mx-auto" style="max-width:260px;flex-shrink:0">
       <div class="scoreboard-label">Players Registered</div>
       <div class="scoreboard-num" id="landing-counter">0 / 8</div>
       <div class="scoreboard-bar">
