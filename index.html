@@ -110,6 +110,17 @@
   </style>
 </head>
 <body class="scanline-wrap">
+<div class="light-beam"></div>
+<div class="light-beam beam-gold"></div>
+<div class="light-beam beam-3"></div>
+<div class="pitch-floor"></div>
+<div class="broadcast-frame"></div>
+<canvas id="particle-canvas"></canvas>
+<div id="draw-loading">
+  <span class="draw-trophy">🏆</span>
+  <div class="draw-text bebas">THE DRAW IS HAPPENING...</div>
+  <div class="draw-sub uppercase tracking-widest">Fate decides all</div>
+</div>
 
 <canvas id="bgCanvas"></canvas>
 <canvas id="confettiCanvas"></canvas>
@@ -118,7 +129,7 @@
 <!-- ═══ LANDING ══════════════════════════════════════════════════ -->
 <section id="page-landing" class="page">
   <div class="min-h-screen flex flex-col items-center justify-center text-center px-4">
-    <div class="mb-6">
+    <div class="mb-6 trophy-glow-pulse">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 215" width="200" height="215" style="filter:drop-shadow(0 0 22px #ffd70066)">
         <defs>
           <linearGradient id="h26a" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -164,19 +175,20 @@
       </svg>
     </div>
     <div class="mb-2 text-sm tracking-widest uppercase" style="color:var(--blue)">⚡ Private Tournament · 8 Players · Fair Draw</div>
-    <h1 class="hero-title bebas">WORLD CUP<br>2026<br><span style="font-size:55%">PRIVATE DRAFT</span></h1>
-    <p class="mt-6 text-lg max-w-md mx-auto" style="color:#7a9ab8">48 nations. 6 tiers. One champion.<br>Every squad decided by fate.</p>
+    <h1 class="hero-title bebas">WORLD CUP<br>2026<br><span class="draft-glow" style="font-size:60%">PRIVATE DRAFT</span></h1>
+    <p class="mt-6 text-lg max-w-md mx-auto" style="color:#7a9ab8">48 nations. 6 tiers. One champion. Every squad decided by fate.</p>
+    <p class="mt-1 text-sm tracking-widest uppercase" style="color:#3a5a70">🇺🇸 USA &nbsp;·&nbsp; 🇲🇽 Mexico &nbsp;·&nbsp; 🇨🇦 Canada</p>
     <div class="mt-10 flex flex-col sm:flex-row gap-4 items-center justify-center">
-      <button class="btn-neon pulse-neon" onclick="App.openRegisterModal()">⚡ JOIN THE BATTLE</button>
+      <button class="btn-neon pulse-neon" onclick="App.openRegisterModal()" onmouseenter="spawnParticles(this)">⚡ JOIN THE BATTLE</button>
       <button class="btn-red" onclick="App.openHostModal()">🔐 HOST LOGIN</button>
     </div>
     <div class="mt-12">
       <div class="text-xs uppercase tracking-widest mb-2" style="color:#3a5a70">Players Registered</div>
       <div class="text-3xl font-bold bebas" id="landing-counter" style="color:var(--neon)">0 / 8</div>
       <div class="prog-track mt-2 mx-auto" style="width:200px">
-        <div class="prog-fill" id="landing-progress" style="width:0%"></div>
+        <div class="prog-fill prog-fill-glow" id="landing-progress" style="width:0%"></div>
       </div>
-    </div>
+    <div class="player-slots" id="player-slots"><div class="player-slot" id="slot-0">·</div><div class="player-slot" id="slot-1">·</div><div class="player-slot" id="slot-2">·</div><div class="player-slot" id="slot-3">·</div><div class="player-slot" id="slot-4">·</div><div class="player-slot" id="slot-5">·</div><div class="player-slot" id="slot-6">·</div><div class="player-slot" id="slot-7">·</div></div>
   </div>
 </section>
 
@@ -475,6 +487,7 @@ const App = {
     const n = this._state.count;
     // Update landing counter
     document.getElementById('landing-counter').textContent=`${n} / 8`;
+    for(let i=0;i<8;i++){const s=document.getElementById('slot-'+i);if(s){s.className='player-slot'+(i<n?' filled':'');s.textContent=i<n?'✓':'·';}}
     document.getElementById('landing-progress').style.width=`${(n/8)*100}%`;
 
     // Refresh current page
@@ -689,5 +702,18 @@ document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>
 
 App.init();
 </script>
+
+<script>
+const pCanvas=document.getElementById('particle-canvas'),pCtx=pCanvas.getContext('2d');let particles=[];
+function resizePC(){pCanvas.width=innerWidth;pCanvas.height=innerHeight;}resizePC();window.addEventListener('resize',resizePC);
+function spawnParticles(el){const r=el.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;for(let i=0;i<18;i++){const a=Math.random()*Math.PI*2,sp=1.5+Math.random()*3;particles.push({x:cx,y:cy,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1.5,life:1,decay:.025+Math.random()*.02,size:2+Math.random()*3,color:Math.random()>.5?'#00ff41':'#ffd700',shape:Math.random()>.5?'ball':'star'});}}
+function animateParticles(){pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);particles=particles.filter(p=>p.life>0);particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.1;p.life-=p.decay;pCtx.save();pCtx.globalAlpha=Math.max(0,p.life);pCtx.fillStyle=p.color;pCtx.translate(p.x,p.y);if(p.shape==='ball'){pCtx.beginPath();pCtx.arc(0,0,p.size,0,Math.PI*2);pCtx.fill();}else{pCtx.beginPath();for(let i=0;i<4;i++){const a=i*Math.PI/2;pCtx.lineTo(Math.cos(a)*p.size,Math.sin(a)*p.size);pCtx.lineTo(Math.cos(a+Math.PI/4)*p.size*.4,Math.sin(a+Math.PI/4)*p.size*.4);}pCtx.closePath();pCtx.fill();}pCtx.restore();});requestAnimationFrame(animateParticles);}
+animateParticles();
+let soundEnabled=false;
+function playClick(){if(!soundEnabled)return;try{const c=new(window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.type='sine';o.frequency.setValueAtTime(440,c.currentTime);o.frequency.exponentialRampToValueAtTime(220,c.currentTime+.08);g.gain.setValueAtTime(.08,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.12);o.start();o.stop(c.currentTime+.12);}catch(e){}}
+document.querySelectorAll('.btn-neon,.btn-red').forEach(b=>b.addEventListener('click',playClick));
+const sb=document.createElement('button');sb.title='Toggle sound';sb.style.cssText='position:fixed;bottom:16px;right:16px;z-index:50;background:#0a1a22;border:1px solid #1e3040;border-radius:50%;width:36px;height:36px;font-size:14px;cursor:pointer;color:#3a5a70;transition:color .2s,border-color .2s';sb.textContent='🔇';sb.onclick=()=>{soundEnabled=!soundEnabled;sb.textContent=soundEnabled?'🔊':'🔇';sb.style.color=soundEnabled?'var(--neon)':'#3a5a70';sb.style.borderColor=soundEnabled?'var(--neon)':'#1e3040';};document.body.appendChild(sb);
+</script>
+
 </body>
 </html>
