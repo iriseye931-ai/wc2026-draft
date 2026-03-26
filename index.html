@@ -118,9 +118,44 @@
 <!-- ═══ LANDING ══════════════════════════════════════════════════ -->
 <section id="page-landing" class="page">
   <div class="min-h-screen flex flex-col items-center justify-center text-center px-4">
-    <div class="mb-8">
-      <div class="float-y inline-block text-8xl mb-4">🏆</div>
-      <div class="spin-slow inline-block text-4xl ml-4">⚽</div>
+    <div class="mb-8 float-y">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200" width="220" height="183" style="filter:drop-shadow(0 0 18px #00ff41aa) drop-shadow(0 0 40px #ffd70055)">
+        <defs>
+          <linearGradient id="goldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:#ffe86a"/>
+            <stop offset="50%" style="stop-color:#ffd700"/>
+            <stop offset="100%" style="stop-color:#c8860a"/>
+          </linearGradient>
+          <linearGradient id="shineGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.35"/>
+            <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0"/>
+          </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="2.5" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <!-- Stars row -->
+        <text x="120" y="20" text-anchor="middle" font-size="18" fill="#ffd700" filter="url(#glow)" font-family="serif" letter-spacing="10">★★★</text>
+        <!-- Trophy cup body -->
+        <path d="M75 30 Q68 32 65 45 Q58 70 70 90 Q80 108 120 115 Q160 108 170 90 Q182 70 175 45 Q172 32 165 30 Z" fill="url(#goldGrad)" stroke="#c8860a" stroke-width="1.5"/>
+        <!-- Shine on cup -->
+        <path d="M90 38 Q85 55 88 75 Q93 58 98 42 Z" fill="url(#shineGrad)"/>
+        <!-- Handles -->
+        <path d="M65 45 Q42 48 40 68 Q39 85 60 88 Q63 80 70 75 Q58 74 58 62 Q59 52 67 52 Z" fill="url(#goldGrad)" stroke="#c8860a" stroke-width="1.2"/>
+        <path d="M175 45 Q198 48 200 68 Q201 85 180 88 Q177 80 170 75 Q182 74 182 62 Q181 52 173 52 Z" fill="url(#goldGrad)" stroke="#c8860a" stroke-width="1.2"/>
+        <!-- "26" inside cup -->
+        <text x="120" y="88" text-anchor="middle" font-size="38" font-weight="900" font-family="'Bebas Neue',Impact,sans-serif" fill="#050e12" opacity="0.55" letter-spacing="-2">26</text>
+        <!-- Stem -->
+        <rect x="110" y="115" width="20" height="22" rx="3" fill="url(#goldGrad)" stroke="#c8860a" stroke-width="1.2"/>
+        <!-- Base plate -->
+        <rect x="88" y="137" width="64" height="12" rx="5" fill="url(#goldGrad)" stroke="#c8860a" stroke-width="1.5"/>
+        <rect x="80" y="149" width="80" height="9" rx="4" fill="url(#goldGrad)" stroke="#c8860a" stroke-width="1.5"/>
+        <!-- "WORLD CUP" text -->
+        <text x="120" y="175" text-anchor="middle" font-size="15" font-weight="700" font-family="'Bebas Neue',Impact,sans-serif" fill="#00ff41" filter="url(#glow)" letter-spacing="4">WORLD CUP</text>
+        <!-- "2026" text -->
+        <text x="120" y="196" text-anchor="middle" font-size="24" font-weight="900" font-family="'Bebas Neue',Impact,sans-serif" fill="url(#goldGrad)" filter="url(#glow)" letter-spacing="6">2026</text>
+      </svg>
     </div>
     <div class="mb-2 text-sm tracking-widest uppercase" style="color:var(--blue)">⚡ Private Tournament · 8 Players · Fair Draw</div>
     <h1 class="hero-title bebas">WORLD CUP<br>2026<br><span style="font-size:55%">PRIVATE DRAFT</span></h1>
@@ -143,7 +178,21 @@
 <section id="page-dashboard" class="page hidden">
   <div class="sticky top-0 z-10 px-4 py-3 flex items-center justify-between" style="background:linear-gradient(180deg,#050e12,transparent);border-bottom:1px solid #1e3040">
     <div class="flex items-center gap-3">
-      <span class="text-2xl bebas glow-green" style="color:var(--neon)">⚽ WC2026</span>
+      <span class="bebas glow-green flex items-center gap-1" style="color:var(--neon);font-size:1.35rem">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="22" height="22" style="display:inline-block;vertical-align:middle;filter:drop-shadow(0 0 4px #ffd700)">
+          <defs>
+            <linearGradient id="tgold" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" style="stop-color:#ffe86a"/><stop offset="100%" style="stop-color:#c8860a"/>
+            </linearGradient>
+          </defs>
+          <path d="M12 5 Q11 6 10 9 Q8 16 12 22 Q16 27 20 28 Q24 27 28 22 Q32 16 30 9 Q29 6 28 5 Z" fill="url(#tgold)"/>
+          <path d="M10 9 Q5 10 5 16 Q5 21 10 22 Q11 19 12 17 Q8 16 8 12 Q9 9 11 9 Z" fill="url(#tgold)"/>
+          <path d="M30 9 Q35 10 35 16 Q35 21 30 22 Q29 19 28 17 Q32 16 32 12 Q31 9 29 9 Z" fill="url(#tgold)"/>
+          <rect x="17" y="28" width="6" height="6" rx="1" fill="url(#tgold)"/>
+          <rect x="12" y="34" width="16" height="4" rx="2" fill="url(#tgold)"/>
+        </svg>
+        WC2026
+      </span>
       <span class="text-xs px-2 py-1 rounded" style="background:#00ff4122;color:var(--neon);border:1px solid var(--neon)44">PRIVATE DRAFT</span>
     </div>
     <div class="flex items-center gap-3">
