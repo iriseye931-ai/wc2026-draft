@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WORLD CUP 2026 – PRIVATE DRAFT</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap');
+
+    :root {
+      --neon:   #00ff41;
+      --gold:   #ffd700;
+      --blue:   #00d4ff;
+      --red:    #ff2244;
+      --bg:     #04080a;
+      --panel:  #0b1418;
+      --panel2: #111e24;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Rajdhani', sans-serif; background: var(--bg); color: #e2e8f0; min-height: 100vh; overflow-x: hidden; }
+    h1, h2, .bebas { font-family: 'Bebas Neue', sans-serif; letter-spacing: .05em; }
+    #bgCanvas { position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: .35; }
+    #confettiCanvas { position: fixed; inset: 0; pointer-events: none; z-index: 999; }
+    .glow-green  { text-shadow: 0 0 8px var(--neon), 0 0 20px var(--neon), 0 0 40px var(--neon); }
+    .glow-gold   { text-shadow: 0 0 8px var(--gold), 0 0 20px var(--gold); }
+    .border-neon { border-color: var(--neon) !important; box-shadow: 0 0 10px var(--neon)44; }
+
+    @keyframes pulse-neon  { 0%,100%{box-shadow:0 0 8px var(--neon)88,0 0 20px var(--neon)44}50%{box-shadow:0 0 20px var(--neon),0 0 50px var(--neon)88} }
+    @keyframes pulse-gold  { 0%,100%{box-shadow:0 0 8px var(--gold)88,0 0 20px var(--gold)44}50%{box-shadow:0 0 24px var(--gold),0 0 60px var(--gold)88} }
+    @keyframes spin-slow   { to{transform:rotate(360deg)} }
+    @keyframes float-y     { 0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)} }
+    @keyframes flicker     { 0%,100%{opacity:1}50%{opacity:.7} }
+    @keyframes reveal-up   { from{opacity:0;transform:translateY(30px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)} }
+    @keyframes stamp       { 0%{transform:scale(3) rotate(-15deg);opacity:0}60%{transform:scale(.9) rotate(2deg);opacity:1}100%{transform:scale(1) rotate(0);opacity:1} }
+    @keyframes scanline    { 0%{top:-5%}100%{top:105%} }
+    @keyframes spin-in     { from{transform:scale(0) rotate(-180deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1} }
+
+    .spin-slow  { animation: spin-slow 8s linear infinite; }
+    .float-y    { animation: float-y 3s ease-in-out infinite; }
+    .pulse-neon { animation: pulse-neon 2s ease-in-out infinite; }
+    .pulse-gold { animation: pulse-gold 2.5s ease-in-out infinite; }
+    .flicker    { animation: flicker 1.5s ease-in-out infinite; }
+    .reveal-up  { animation: reveal-up .5s cubic-bezier(.2,.8,.4,1) forwards; }
+    .stamp-anim { animation: stamp .5s cubic-bezier(.2,.8,.4,1) forwards; }
+
+    .btn-neon {
+      background: transparent; border: 2px solid var(--neon); color: var(--neon);
+      padding: .75rem 2.5rem; font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem;
+      letter-spacing: .1em; cursor: pointer; transition: all .25s; position: relative; overflow: hidden;
+    }
+    .btn-neon::before { content:''; position:absolute; inset:0; background:var(--neon); transform:scaleX(0); transform-origin:left; transition:transform .25s; z-index:-1; }
+    .btn-neon:hover { color:#000; box-shadow:0 0 30px var(--neon); }
+    .btn-neon:hover::before { transform:scaleX(1); }
+    .btn-neon:disabled { opacity:.35; cursor:not-allowed; }
+    .btn-neon:disabled:hover { color:var(--neon); box-shadow:none; }
+    .btn-neon:disabled::before { transform:scaleX(0); }
+
+    .btn-gold {
+      background: linear-gradient(135deg, var(--gold), #b8860b); color: #000; border: none;
+      padding: .75rem 2.5rem; font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem;
+      letter-spacing: .1em; cursor: pointer; transition: all .25s; box-shadow: 0 0 20px var(--gold)66;
+    }
+    .btn-gold:hover { box-shadow: 0 0 40px var(--gold); transform: translateY(-2px); }
+    .btn-gold:disabled { opacity:.35; cursor:not-allowed; transform:none; box-shadow:none; }
+
+    .btn-red {
+      background: transparent; border: 2px solid var(--red); color: var(--red);
+      padding: .5rem 1.5rem; font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem;
+      letter-spacing: .08em; cursor: pointer; transition: all .2s;
+    }
+    .btn-red:hover { background: var(--red); color: #fff; }
+
+    .panel { background: var(--panel); border: 1px solid #1e3040; }
+    .panel-bright { background: var(--panel2); border: 1px solid #2a4060; }
+    .prog-track { height: 8px; background: #1e3040; border-radius: 4px; overflow: hidden; }
+    .prog-fill { height: 100%; background: linear-gradient(90deg, var(--neon), var(--blue)); border-radius: 4px; transition: width .5s cubic-bezier(.2,.8,.4,1); box-shadow: 0 0 8px var(--neon); }
+
+    .tier-badge { font-family:'Bebas Neue',sans-serif; letter-spacing:.08em; font-size:.75rem; padding:2px 8px; border-radius:2px; }
+    .t1{background:#ffd70022;color:var(--gold);border:1px solid var(--gold)66}
+    .t2{background:#00d4ff22;color:var(--blue);border:1px solid var(--blue)66}
+    .t3{background:#00ff4122;color:var(--neon);border:1px solid var(--neon)66}
+    .t4{background:#ff880022;color:#ff8800;border:1px solid #ff880066}
+    .t5{background:#cc44ff22;color:#cc44ff;border:1px solid #cc44ff66}
+    .t6{background:#ff224422;color:var(--red);border:1px solid var(--red)66}
+
+    .modal-bg { position:fixed;inset:0;background:#000000cc;backdrop-filter:blur(4px);z-index:100;display:flex;align-items:center;justify-content:center; }
+    .pitch-bg { background: radial-gradient(ellipse 60% 40% at 50% 50%,#0d2e0d,transparent 70%), repeating-linear-gradient(0deg,transparent,transparent 49px,#1a3a1a44 50px), repeating-linear-gradient(90deg,transparent,transparent 49px,#1a3a1a22 50px), #071007; border:2px solid #1a3a1a; border-radius:12px; }
+    .avatar { width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.3rem;border:2px solid;flex-shrink:0; }
+    .locked-stamp { position:absolute;top:-8px;right:-8px;background:var(--neon);color:#000;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.1em;padding:2px 6px;border-radius:2px;box-shadow:0 0 8px var(--neon); }
+    .team-card { transition:transform .2s,box-shadow .2s; }
+    .team-card:hover { transform:translateY(-4px); }
+    ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:#2a4060;border-radius:3px}
+    input { background:#0b1a20;border:1px solid #2a4060;color:#e2e8f0;padding:.6rem 1rem;width:100%;font-family:'Rajdhani',sans-serif;font-size:1rem;transition:border-color .2s,box-shadow .2s; }
+    input:focus { outline:none;border-color:var(--neon);box-shadow:0 0 10px var(--neon)44; }
+    input::placeholder { color:#4a6080; }
+    .page { position:relative;z-index:1; }
+    .hidden { display:none !important; }
+
+    .hero-title { font-size:clamp(3rem,10vw,9rem);line-height:.9;background:linear-gradient(135deg,#fff 0%,var(--gold) 40%,var(--neon) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent; }
+
+    /* Connection status */
+    #conn-status { position:fixed;top:12px;right:12px;z-index:50;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:.1em;padding:4px 10px;border-radius:2px; }
+    .conn-live   { background:#00ff4122;color:var(--neon);border:1px solid var(--neon)44; }
+    .conn-off    { background:#ff224422;color:var(--red);border:1px solid var(--red)44; }
+
+    /* Scanning overlay */
+    .scanline-wrap { position:relative;overflow:hidden; }
+    .scanline-wrap::after { content:'';position:absolute;left:0;right:0;height:80px;background:linear-gradient(transparent,rgba(0,255,65,.04),transparent);animation:scanline 4s linear infinite;pointer-events:none; }
+  </style>
+</head>
+<body class="scanline-wrap">
+
+<canvas id="bgCanvas"></canvas>
+<canvas id="confettiCanvas"></canvas>
+<div id="conn-status" class="conn-off">● CONNECTING</div>
+
+<!-- ═══ LANDING ══════════════════════════════════════════════════ -->
+<section id="page-landing" class="page">
+  <div class="min-h-screen flex flex-col items-center justify-center text-center px-4">
+    <div class="mb-8">
+      <div class="float-y inline-block text-8xl mb-4">🏆</div>
+      <div class="spin-slow inline-block text-4xl ml-4">⚽</div>
+    </div>
+    <div class="mb-2 text-sm tracking-widest uppercase" style="color:var(--blue)">⚡ Private Tournament · 8 Players · Fair Draw</div>
+    <h1 class="hero-title bebas">WORLD CUP<br>2026<br><span style="font-size:55%">PRIVATE DRAFT</span></h1>
+    <p class="mt-6 text-lg max-w-md mx-auto" style="color:#7a9ab8">48 nations. 6 tiers. One champion.<br>Every squad decided by fate.</p>
+    <div class="mt-10 flex flex-col sm:flex-row gap-4 items-center justify-center">
+      <button class="btn-neon pulse-neon" onclick="App.openRegisterModal()">⚡ JOIN THE BATTLE</button>
+      <button class="btn-red" onclick="App.openHostModal()">🔐 HOST LOGIN</button>
+    </div>
+    <div class="mt-12">
+      <div class="text-xs uppercase tracking-widest mb-2" style="color:#3a5a70">Players Registered</div>
+      <div class="text-3xl font-bold bebas" id="landing-counter" style="color:var(--neon)">0 / 8</div>
+      <div class="prog-track mt-2 mx-auto" style="width:200px">
+        <div class="prog-fill" id="landing-progress" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ DASHBOARD ════════════════════════════════════════════════ -->
+<section id="page-dashboard" class="page hidden">
+  <div class="sticky top-0 z-10 px-4 py-3 flex items-center justify-between" style="background:linear-gradient(180deg,#050e12,transparent);border-bottom:1px solid #1e3040">
+    <div class="flex items-center gap-3">
+      <span class="text-2xl bebas glow-green" style="color:var(--neon)">⚽ WC2026</span>
+      <span class="text-xs px-2 py-1 rounded" style="background:#00ff4122;color:var(--neon);border:1px solid var(--neon)44">PRIVATE DRAFT</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-sm" style="color:#7a9ab8">Playing as <span id="topbar-name" class="font-bold" style="color:var(--gold)"></span></span>
+      <button class="btn-red" onclick="App.logout()" style="font-size:.8rem;padding:.3rem .8rem">LOGOUT</button>
+    </div>
+  </div>
+
+  <div class="max-w-5xl mx-auto px-4 py-6">
+    <div class="panel p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div>
+        <div class="text-xs uppercase tracking-widest mb-1" style="color:#3a5a70">Tournament Status</div>
+        <div class="text-3xl bebas" id="dash-status-text" style="color:var(--neon)">REGISTRATIONS OPEN</div>
+        <div class="prog-track mt-2" style="width:260px"><div class="prog-fill" id="dash-progress" style="width:0%"></div></div>
+        <div class="text-sm mt-1" style="color:#5a8aaa"><span id="dash-counter" class="font-bold" style="color:var(--neon)">0</span> / 8 players registered</div>
+      </div>
+      <div id="draw-zone" class="hidden text-center">
+        <button id="btn-draw" class="btn-gold text-xl px-8 py-4 pulse-gold" onclick="App.triggerDraw()" disabled>🎲 DRAW THE SQUADS</button>
+        <div id="draw-hint" class="text-xs mt-2" style="color:#5a8aaa">All 8 players must register first</div>
+      </div>
+      <div id="view-squad-zone" class="hidden">
+        <button class="btn-neon" onclick="App.showSquad()">⚽ VIEW MY SQUAD</button>
+      </div>
+    </div>
+
+    <div class="mb-4 text-xs uppercase tracking-widest" style="color:#3a5a70">Registered Players</div>
+    <div id="players-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+    <div id="empty-slots" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+  </div>
+</section>
+
+<!-- ═══ SQUAD ════════════════════════════════════════════════════ -->
+<section id="page-squad" class="page hidden">
+  <div class="sticky top-0 z-10 px-4 py-3 flex items-center justify-between" style="background:linear-gradient(180deg,#050e12,transparent);border-bottom:1px solid #1e3040">
+    <button class="btn-red" onclick="App.showDashboard()" style="font-size:.8rem;padding:.3rem .8rem">← BACK</button>
+    <span class="bebas text-xl" style="color:var(--gold)">MY SQUAD</span>
+    <button class="btn-neon" onclick="App.copySquad()" style="font-size:.8rem;padding:.3rem .8rem">📋 SHARE</button>
+  </div>
+  <div class="max-w-3xl mx-auto px-4 py-6">
+    <div class="text-center mb-8">
+      <div class="text-6xl mb-2" id="squad-initial"></div>
+      <h2 class="text-4xl bebas glow-gold" style="color:var(--gold)" id="squad-player-name"></h2>
+      <div class="text-sm mt-1" style="color:#5a8aaa">6 NATIONS · WORLD CUP 2026</div>
+    </div>
+    <div class="pitch-bg p-6">
+      <div class="text-center text-xs uppercase tracking-widest mb-6 flicker" style="color:var(--neon)44">⚽ YOUR NATIONS ⚽</div>
+      <div id="squad-cards" class="grid grid-cols-2 sm:grid-cols-3 gap-4"></div>
+    </div>
+    <div class="panel p-4 mt-6">
+      <div class="text-xs uppercase tracking-widest mb-3" style="color:#3a5a70">⚔️ Rivalry Meter</div>
+      <div id="rivalry-list" class="flex flex-col gap-2 text-sm"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ REGISTER MODAL ════════════════════════════════════════════ -->
+<div id="modal-register" class="modal-bg hidden">
+  <div class="panel p-6 w-full max-w-md mx-4 relative" style="border:1px solid var(--neon)44">
+    <button class="absolute top-3 right-4 text-2xl" style="color:#3a5a70" onclick="App.closeModal('modal-register')">✕</button>
+    <h2 class="text-3xl bebas mb-1" style="color:var(--neon)">JOIN THE DRAFT</h2>
+    <p class="text-sm mb-5" style="color:#5a8aaa">Register to secure your spot in the tournament</p>
+    <div class="flex flex-col gap-3">
+      <input id="reg-name" type="text" placeholder="Full Name" maxlength="30" />
+      <input id="reg-email" type="email" placeholder="Email Address" />
+    </div>
+    <div id="reg-error" class="text-sm mt-3 hidden" style="color:var(--red)"></div>
+    <button class="btn-neon w-full mt-5" onclick="App.register()">⚡ REGISTER NOW</button>
+    <p class="text-xs mt-4 text-center" style="color:#3a5a70">Already registered? Enter your email and click login.</p>
+    <button class="btn-red w-full mt-2" onclick="App.loginExisting()">LOGIN WITH EMAIL</button>
+  </div>
+</div>
+
+<!-- ═══ HOST MODAL ════════════════════════════════════════════════ -->
+<div id="modal-host" class="modal-bg hidden">
+  <div class="panel p-6 w-full max-w-sm mx-4 relative" style="border:1px solid var(--gold)44">
+    <button class="absolute top-3 right-4 text-2xl" style="color:#3a5a70" onclick="App.closeModal('modal-host')">✕</button>
+    <h2 class="text-3xl bebas mb-1" style="color:var(--gold)">HOST ACCESS</h2>
+    <p class="text-sm mb-5" style="color:#5a8aaa">Enter the host password to unlock draw controls</p>
+    <input id="host-pass" type="password" placeholder="Password" />
+    <div id="host-error" class="text-sm mt-2 hidden" style="color:var(--red)"></div>
+    <button class="btn-gold w-full mt-4" onclick="App.verifyHost()">🔐 UNLOCK</button>
+    <button class="btn-red w-full mt-2" style="font-size:.9rem" onclick="App.resetTournament()">🔄 RESET TOURNAMENT</button>
+  </div>
+</div>
+
+<!-- ═══ TOAST ══════════════════════════════════════════════════════ -->
+<div id="toast" class="hidden" style="position:fixed;bottom:2rem;right:2rem;z-index:200;background:var(--panel2);border:1px solid var(--neon)44;padding:.75rem 1.5rem;border-radius:4px;font-family:'Rajdhani',sans-serif;font-size:1rem;color:var(--neon);box-shadow:0 0 20px var(--neon)22;max-width:320px;"></div>
+
+<script>
+/* ================================================================
+   CONSTANTS
+================================================================ */
+
+const TIER_META = {
+  tier1:{label:"GOD TIER",    short:"T1",color:"var(--gold)",cls:"t1"},
+  tier2:{label:"ELITE",       short:"T2",color:"var(--blue)",cls:"t2"},
+  tier3:{label:"CONTENDERS",  short:"T3",color:"var(--neon)",cls:"t3"},
+  tier4:{label:"DARK HORSES", short:"T4",color:"#ff8800",    cls:"t4"},
+  tier5:{label:"WILDCARDS",   short:"T5",color:"#cc44ff",    cls:"t5"},
+  tier6:{label:"UNDERDOGS",   short:"T6",color:"var(--red)", cls:"t6"},
+};
+
+const FLAGS = {
+  "Brazil":"🇧🇷","France":"🇫🇷","England":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","Argentina":"🇦🇷","Spain":"🇪🇸","Germany":"🇩🇪",
+  "Portugal":"🇵🇹","Belgium":"🇧🇪","Netherlands":"🇳🇱","Italy":"🇮🇹","Croatia":"🇭🇷","Uruguay":"🇺🇾",
+  "Denmark":"🇩🇰","Mexico":"🇲🇽","USA":"🇺🇸","Japan":"🇯🇵","Colombia":"🇨🇴","Morocco":"🇲🇦",
+  "Senegal":"🇸🇳","Switzerland":"🇨🇭","Poland":"🇵🇱","Sweden":"🇸🇪","Serbia":"🇷🇸","Iran":"🇮🇷",
+  "South Korea":"🇰🇷","Australia":"🇦🇺","Egypt":"🇪🇬","Nigeria":"🇳🇬","Cameroon":"🇨🇲","Ghana":"🇬🇭",
+  "Tunisia":"🇹🇳","Algeria":"🇩🇿","Peru":"🇵🇪","Chile":"🇨🇱","Ecuador":"🇪🇨","Paraguay":"🇵🇾",
+  "Venezuela":"🇻🇪","Bolivia":"🇧🇴","Costa Rica":"🇨🇷","Panama":"🇵🇦","Canada":"🇨🇦","Jamaica":"🇯🇲",
+  "Honduras":"🇭🇳","Saudi Arabia":"🇸🇦","Uzbekistan":"🇺🇿","Iraq":"🇮🇶","Qatar":"🇶🇦","New Zealand":"🇳🇿"
+};
+
+const RIVALRY_LINES = [
+  "{a} vs {b}: 🔥 This one's personal. One of them is going home early.",
+  "{a} vs {b}: ⚡ The eternal clash. Expect fireworks.",
+  "{a} vs {b}: 🗡️ Don't underestimate the underdog.",
+  "{a} vs {b}: 🧊 Ice cold rivalry. Both playing for pride.",
+  "{a} vs {b}: ⚽ Group stage nightmare if these two meet.",
+];
+
+// Detect API base URL — works locally and on Railway
+const API = window.location.origin;
+const WS_URL = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/ws`;
+
+/* ================================================================
+   BACKGROUND CANVAS
+================================================================ */
+(function() {
+  const c = document.getElementById('bgCanvas'), ctx = c.getContext('2d');
+  const balls = [];
+  function resize() { c.width = innerWidth; c.height = innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+  for (let i=0;i<18;i++) balls.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4,size:12+Math.random()*28,opacity:.08+Math.random()*.18,rot:Math.random()*Math.PI*2,rs:(Math.random()-.5)*.015});
+  function draw(b) {
+    ctx.save();ctx.globalAlpha=b.opacity;ctx.translate(b.x,b.y);ctx.rotate(b.rot);
+    ctx.beginPath();ctx.arc(0,0,b.size,0,Math.PI*2);ctx.strokeStyle='#00ff41';ctx.lineWidth=1.2;ctx.stroke();
+    ctx.beginPath();for(let i=0;i<5;i++){const a=(i/5)*Math.PI*2-Math.PI/2;i?ctx.lineTo(Math.cos(a)*b.size*.45,Math.sin(a)*b.size*.45):ctx.moveTo(Math.cos(a)*b.size*.45,Math.sin(a)*b.size*.45);}ctx.closePath();ctx.strokeStyle='#00ff41';ctx.lineWidth=.8;ctx.stroke();
+    ctx.restore();
+  }
+  function frame() {
+    ctx.clearRect(0,0,c.width,c.height);
+    balls.forEach(b=>{b.x+=b.vx;b.y+=b.vy;b.rot+=b.rs;if(b.x<-b.size)b.x=c.width+b.size;if(b.x>c.width+b.size)b.x=-b.size;if(b.y<-b.size)b.y=c.height+b.size;if(b.y>c.height+b.size)b.y=-b.size;draw(b);});
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+
+/* ================================================================
+   CONFETTI
+================================================================ */
+const Confetti = (function(){
+  const c = document.getElementById('confettiCanvas'), ctx = c.getContext('2d');
+  let pts = [];
+  function resize(){c.width=innerWidth;c.height=innerHeight;}
+  resize();window.addEventListener('resize',resize);
+  const COLS=['#ffd700','#00ff41','#00d4ff','#ff2244','#cc44ff','#ff8800','#ffffff'];
+  return {
+    burst() {
+      pts=[];
+      for(let i=0;i<220;i++) pts.push({x:Math.random()*c.width,y:-10,vx:(Math.random()-.5)*8,vy:2+Math.random()*6,rot:Math.random()*360,rs:(Math.random()-.5)*10,color:COLS[Math.floor(Math.random()*COLS.length)],w:8+Math.random()*12,h:4+Math.random()*6,life:1,decay:.007+Math.random()*.007,shape:Math.random()>.5?'rect':'circle'});
+      (function loop(){
+        ctx.clearRect(0,0,c.width,c.height);
+        let alive=false;
+        pts.forEach(p=>{if(p.life<=0)return;alive=true;p.x+=p.vx;p.y+=p.vy;p.vy+=.15;p.rot+=p.rs;p.life-=p.decay;ctx.save();ctx.globalAlpha=Math.max(0,p.life);ctx.translate(p.x,p.y);ctx.rotate(p.rot*Math.PI/180);ctx.fillStyle=p.color;p.shape==='rect'?ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h):(ctx.beginPath(),ctx.arc(0,0,p.w/2,0,Math.PI*2),ctx.fill());ctx.restore();});
+        if(alive)requestAnimationFrame(loop);else ctx.clearRect(0,0,c.width,c.height);
+      })();
+    }
+  };
+})();
+
+/* ================================================================
+   TOAST
+================================================================ */
+function toast(msg, ms=3500) {
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.remove('hidden');
+  clearTimeout(toast._t);
+  toast._t=setTimeout(()=>el.classList.add('hidden'),ms);
+}
+
+/* ================================================================
+   APP
+================================================================ */
+const App = {
+  _state: { players:[], squads:{}, draw_done:false, count:0 },
+  _ws: null,
+  _wsRetry: 1000,
+  _hostVerified: false,
+  _squadViewId: null,
+
+  // ── Session ──────────────────────────────────────────────────
+  get currentPlayer() { try{return JSON.parse(sessionStorage.getItem('wc_player')||'null');}catch{return null;} },
+  set currentPlayer(p) { p ? sessionStorage.setItem('wc_player',JSON.stringify(p)) : sessionStorage.removeItem('wc_player'); },
+
+  // ── Init ─────────────────────────────────────────────────────
+  async init() {
+    this.connectWS();
+    const cp = this.currentPlayer;
+    if (cp) { this.showDashboard(); return; }
+    this.showPage('page-landing');
+  },
+
+  // ── Pages ─────────────────────────────────────────────────────
+  showPage(id) {
+    ['page-landing','page-dashboard','page-squad'].forEach(p=>document.getElementById(p).classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+    window.scrollTo(0,0);
+  },
+  showDashboard() { this.showPage('page-dashboard'); this.renderDashboard(); },
+  showSquad(playerId) {
+    const pid = playerId || this.currentPlayer?.id;
+    const player = this._state.players.find(p=>p.id===pid);
+    const squad = this._state.squads[pid];
+    if (!player || !squad) { toast("Draw hasn't happened yet!"); return; }
+    this._squadViewId = pid;
+    this.showPage('page-squad');
+    this.renderSquad(player, squad);
+  },
+
+  // ── WebSocket ─────────────────────────────────────────────────
+  connectWS() {
+    const ws = new WebSocket(WS_URL);
+    this._ws = ws;
+    const connEl = document.getElementById('conn-status');
+
+    ws.onopen = () => {
+      connEl.textContent='● LIVE';
+      connEl.className='conn-live';
+      this._wsRetry=1000;
+    };
+    ws.onmessage = (e) => {
+      try {
+        const msg = JSON.parse(e.data);
+        this._state = { players: msg.players||[], squads: msg.squads||{}, draw_done: msg.draw_done||false, count: msg.count||0 };
+        this.onStateUpdate(msg.type);
+      } catch{}
+    };
+    ws.onclose = () => {
+      connEl.textContent='● OFFLINE';
+      connEl.className='conn-off';
+      setTimeout(()=>this.connectWS(), this._wsRetry);
+      this._wsRetry = Math.min(this._wsRetry*2, 15000);
+    };
+    ws.onerror = () => {};
+  },
+
+  onStateUpdate(type) {
+    const n = this._state.count;
+    // Update landing counter
+    document.getElementById('landing-counter').textContent=`${n} / 8`;
+    document.getElementById('landing-progress').style.width=`${(n/8)*100}%`;
+
+    // Refresh current page
+    if (!document.getElementById('page-dashboard').classList.contains('hidden')) this.renderDashboard();
+    if (!document.getElementById('page-squad').classList.contains('hidden') && this._squadViewId) {
+      const player = this._state.players.find(p=>p.id===this._squadViewId);
+      const squad = this._state.squads[this._squadViewId];
+      if (player && squad) this.renderSquad(player, squad);
+    }
+
+    // Confetti on draw complete
+    if (type === 'draw_complete') {
+      toast("🏆 SQUADS DRAWN! Destiny decided!", 6000);
+      Confetti.burst();
+    }
+  },
+
+  // ── Modals ────────────────────────────────────────────────────
+  openRegisterModal() {
+    document.getElementById('modal-register').classList.remove('hidden');
+    document.getElementById('reg-name').value='';
+    document.getElementById('reg-email').value='';
+    document.getElementById('reg-error').classList.add('hidden');
+    setTimeout(()=>document.getElementById('reg-name').focus(),100);
+  },
+  openHostModal() {
+    document.getElementById('modal-host').classList.remove('hidden');
+    document.getElementById('host-pass').value='';
+    document.getElementById('host-error').classList.add('hidden');
+    setTimeout(()=>document.getElementById('host-pass').focus(),100);
+  },
+  closeModal(id) { document.getElementById(id).classList.add('hidden'); },
+
+  // ── Register / Login ──────────────────────────────────────────
+  async register() {
+    const name=document.getElementById('reg-name').value.trim();
+    const email=document.getElementById('reg-email').value.trim();
+    const err=document.getElementById('reg-error');
+    err.classList.add('hidden');
+    if(!name){err.textContent='⚠️ Enter your name';err.classList.remove('hidden');return;}
+    if(!email||!email.includes('@')){err.textContent='⚠️ Enter a valid email';err.classList.remove('hidden');return;}
+    try {
+      const r = await fetch(`${API}/api/register`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email})});
+      const body = await r.json();
+      if(!r.ok){err.textContent=`❌ ${body.detail||'Registration failed'}`;err.classList.remove('hidden');return;}
+      this.currentPlayer = body.player;
+      this.closeModal('modal-register');
+      toast(`⚡ Welcome, ${name}! You're in.`);
+      this.showDashboard();
+    } catch(e){err.textContent='❌ Server error — try again';err.classList.remove('hidden');}
+  },
+  async loginExisting() {
+    const email=document.getElementById('reg-email').value.trim();
+    const err=document.getElementById('reg-error');
+    err.classList.add('hidden');
+    if(!email){err.textContent='⚠️ Enter your email to login';err.classList.remove('hidden');return;}
+    try {
+      const r=await fetch(`${API}/api/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+      const body=await r.json();
+      if(!r.ok){err.textContent=`❌ ${body.detail||'Not found'}`;err.classList.remove('hidden');return;}
+      this.currentPlayer=body.player;
+      this.closeModal('modal-register');
+      toast(`🏆 Welcome back, ${body.player.name}!`);
+      this.showDashboard();
+    } catch{err.textContent='❌ Server error';err.classList.remove('hidden');}
+  },
+  logout() { this.currentPlayer=null; this._hostVerified=false; this.showPage('page-landing'); },
+
+  // ── Host ──────────────────────────────────────────────────────
+  verifyHost() {
+    const pass=document.getElementById('host-pass').value;
+    const err=document.getElementById('host-error');
+    // We don't expose the password client-side — draw API will validate it
+    this._hostPass=pass;
+    this._hostVerified=true;
+    this.closeModal('modal-host');
+    toast("🔐 Host access granted");
+    if(document.getElementById('page-dashboard').classList.contains('hidden')) this.showDashboard();
+    else this.renderDashboard();
+  },
+  async resetTournament() {
+    const pass=document.getElementById('host-pass').value;
+    if(!confirm('⚠️ RESET the entire tournament?\nAll players and squads will be deleted.'))return;
+    try {
+      const r=await fetch(`${API}/api/reset`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pass})});
+      if(!r.ok){const b=await r.json();toast(`❌ ${b.detail}`);return;}
+      this.closeModal('modal-host');
+      this._hostVerified=false;
+      this.currentPlayer=null;
+      toast("🔄 Tournament reset");
+      this.showPage('page-landing');
+    } catch{toast("❌ Reset failed");}
+  },
+
+  // ── Draw ──────────────────────────────────────────────────────
+  async triggerDraw() {
+    if(this._state.count<8){toast("Need 8 players first!");return;}
+    if(!confirm('🎲 DRAW THE SQUADS?\n\nRandomly assign 6 teams to each player.\nThis cannot be undone!'))return;
+    try {
+      const r=await fetch(`${API}/api/draw`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:this._hostPass||''})});
+      if(!r.ok){const b=await r.json();toast(`❌ ${b.detail}`);return;}
+      // WS will broadcast draw_complete — confetti fires there
+    } catch{toast("❌ Draw failed — check connection");}
+  },
+
+  // ── Dashboard render ──────────────────────────────────────────
+  renderDashboard() {
+    const {players, squads, draw_done, count} = this._state;
+    const cp = this.currentPlayer;
+    document.getElementById('topbar-name').textContent = cp ? cp.name : (this._hostVerified ? '[ HOST ]' : '?');
+    document.getElementById('dash-counter').textContent = count;
+    document.getElementById('dash-progress').style.width = `${(count/8)*100}%`;
+
+    const statusEl = document.getElementById('dash-status-text');
+    if(draw_done){statusEl.textContent='🏆 SQUADS LOCKED IN';statusEl.style.color='var(--gold)';}
+    else if(count===8){statusEl.textContent='⚡ READY TO DRAW';statusEl.style.color='var(--neon)';}
+    else{statusEl.textContent='REGISTRATIONS OPEN';statusEl.style.color='var(--neon)';}
+
+    const drawZone=document.getElementById('draw-zone');
+    const viewZone=document.getElementById('view-squad-zone');
+    if(draw_done && cp && squads[cp.id]){drawZone.classList.add('hidden');viewZone.classList.remove('hidden');}
+    else if(this._hostVerified && !draw_done){
+      drawZone.classList.remove('hidden');viewZone.classList.add('hidden');
+      const btn=document.getElementById('btn-draw');btn.disabled=count<8;
+      document.getElementById('draw-hint').textContent=count<8?`Waiting for ${8-count} more player${8-count>1?'s':''}`:'🎲 All in — ready to draw!';
+    } else {drawZone.classList.add('hidden');viewZone.classList.add('hidden');}
+
+    const grid=document.getElementById('players-grid');
+    const slots=document.getElementById('empty-slots');
+    grid.innerHTML='';slots.innerHTML='';
+
+    players.forEach((p,idx)=>{
+      const isMe=cp&&p.id===cp.id;
+      const squad=squads[p.id];
+      const card=document.createElement('div');
+      card.className='panel-bright p-4 relative reveal-up';
+      card.style.animationDelay=`${idx*.07}s`;card.style.opacity='0';
+      if(isMe) card.style.border='1px solid var(--neon)66';
+
+      let squadHtml='';
+      if(squad&&draw_done){
+        squadHtml=`<div class="mt-3 grid grid-cols-3 gap-2">${Object.entries(squad).map(([tier,team])=>`
+          <div class="text-center p-1 rounded" style="background:#0a1418;border:1px solid #1e3040">
+            <div class="text-lg">${FLAGS[team]||'🏳️'}</div>
+            <div class="text-xs font-bold truncate" style="color:#c0d8e8">${team}</div>
+            <div class="tier-badge ${TIER_META[tier].cls} mt-1">${TIER_META[tier].short}</div>
+          </div>`).join('')}</div>`;
+      }
+
+      card.innerHTML=`
+        ${draw_done?'<div class="locked-stamp stamp-anim">LOCKED IN</div>':''}
+        <div class="flex items-center gap-3">
+          <div class="avatar" style="background:${p.avatar_color}22;border-color:${p.avatar_color};color:${p.avatar_color}">${p.avatar_initial}</div>
+          <div class="flex-1 min-w-0">
+            <div class="font-bold text-base truncate" style="color:${isMe?'var(--neon)':'#e2e8f0'}">${p.name}${isMe?' <span style="font-size:.7rem;color:var(--neon)44">(YOU)</span>':''}</div>
+            <div class="text-xs" style="color:#3a5a70">${p.email}</div>
+          </div>
+          <div class="text-xs px-2 py-1 rounded" style="background:#00ff4122;color:var(--neon);border:1px solid var(--neon)22">REGISTERED</div>
+        </div>
+        ${squadHtml}
+        ${(draw_done&&squad)?`<button class="btn-${isMe?'neon':'red'} w-full mt-3 py-2" style="font-size:.9rem" onclick="App.showSquad('${p.id}')">${isMe?'⚽ VIEW MY SQUAD':'👁️ VIEW SQUAD'}</button>`:''}
+      `;
+      grid.appendChild(card);
+    });
+
+    for(let i=0;i<8-count;i++){
+      const s=document.createElement('div');
+      s.className='panel p-4 flex items-center gap-3';s.style.opacity='.4';
+      s.innerHTML=`<div class="avatar" style="border-color:#2a4060;color:#2a4060;border-style:dashed">?</div><div><div class="font-bold text-sm" style="color:#2a4060">AWAITING PLAYER</div><div class="text-xs" style="color:#1e3040">Slot ${count+i+1} of 8</div></div>`;
+      slots.appendChild(s);
+    }
+  },
+
+  // ── Squad render ──────────────────────────────────────────────
+  renderSquad(player, squad) {
+    document.getElementById('squad-player-name').textContent=player.name;
+    document.getElementById('squad-initial').textContent=player.avatar_initial;
+    document.getElementById('squad-cards').innerHTML=Object.entries(squad).map(([tier,team],idx)=>{
+      const meta=TIER_META[tier];
+      return `<div class="team-card panel p-3 text-center relative reveal-up" style="animation-delay:${idx*.1}s;opacity:0;border-top:3px solid ${meta.color}">
+        <div class="tier-badge ${meta.cls} mb-2">${meta.short} · ${meta.label}</div>
+        <div class="text-4xl mb-2">${FLAGS[team]||'🏳️'}</div>
+        <div class="text-base font-bold" style="color:#e2e8f0">${team}</div>
+        <div style="display:inline-block;background:var(--neon);color:#000;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.1em;padding:2px 6px;border-radius:2px;margin-top:6px;box-shadow:0 0 8px var(--neon)">LOCKED IN</div>
+      </div>`;
+    }).join('');
+
+    const others=this._state.players.filter(p=>p.id!==player.id).slice(0,4);
+    document.getElementById('rivalry-list').innerHTML=others.map(o=>{
+      const line=RIVALRY_LINES[Math.floor(Math.random()*RIVALRY_LINES.length)];
+      return `<div class="text-sm py-1" style="color:#5a8aaa;border-bottom:1px solid #1e3040">${line.replace('{a}',player.name).replace('{b}',o.name)}</div>`;
+    }).join('');
+  },
+
+  copySquad() {
+    const cp=this.currentPlayer;if(!cp)return;
+    const squad=this._state.squads[cp.id];if(!squad){toast("No squad yet");return;}
+    const lines=[`⚽ ${cp.name}'s World Cup 2026 Squad`,'',...Object.entries(squad).map(([tier,team])=>`${TIER_META[tier].label}: ${FLAGS[team]||''} ${team}`),'','#WC2026 #PrivateDraft'];
+    navigator.clipboard?.writeText(lines.join('\n')).then(()=>toast("📋 Squad copied!")).catch(()=>toast(lines.join('\n')));
+  },
+};
+
+/* keyboard shortcuts */
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape') document.querySelectorAll('.modal-bg').forEach(m=>m.classList.add('hidden'));
+  if(e.key==='Enter'){
+    if(!document.getElementById('modal-register').classList.contains('hidden')) App.register();
+    if(!document.getElementById('modal-host').classList.contains('hidden')) App.verifyHost();
+  }
+});
+document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.add('hidden');}));
+
+App.init();
+</script>
+</body>
+</html>
