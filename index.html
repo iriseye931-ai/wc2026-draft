@@ -165,48 +165,126 @@ body,h1,h2,h3,p{margin:0;padding:0}
     .scanline-wrap { position:relative;overflow:hidden; }
     .scanline-wrap::after { content:'';position:absolute;left:0;right:0;height:80px;background:linear-gradient(transparent,rgba(0,255,65,.04),transparent);animation:scanline 4s linear infinite;pointer-events:none;z-index:2; }
 
-    /* ── ATMOSPHERE: Light beams ── */
-    @keyframes beam-sweep { 0%,100%{opacity:.06}50%{opacity:.16} }
+    /* ── ATMOSPHERE: Stadium floodlight beams (panning) ── */
+    @keyframes beam-pan-1 { 0%,100%{transform:rotate(-20deg);opacity:.07} 50%{transform:rotate(-6deg);opacity:.2} }
+    @keyframes beam-pan-2 { 0%,100%{transform:rotate(4deg);opacity:.05} 50%{transform:rotate(-6deg);opacity:.16} }
+    @keyframes beam-pan-3 { 0%,100%{transform:rotate(10deg);opacity:.06} 50%{transform:rotate(22deg);opacity:.18} }
+    @keyframes beam-pan-gold { 0%,100%{transform:rotate(-4deg);opacity:.04} 50%{transform:rotate(6deg);opacity:.13} }
     .light-beam {
-      position:fixed;top:-120px;width:4px;height:200vh;
-      background:linear-gradient(180deg,transparent 0%,rgba(0,255,65,.14) 30%,rgba(0,255,65,.06) 70%,transparent 100%);
-      transform-origin:top center;pointer-events:none;z-index:0;border-radius:2px;
+      position:fixed;top:-80px;width:6px;height:210vh;
+      background:linear-gradient(180deg,rgba(255,255,255,.15) 0%,rgba(0,255,65,.18) 20%,rgba(0,255,65,.08) 60%,transparent 100%);
+      transform-origin:top center;pointer-events:none;z-index:0;border-radius:3px;
+      filter:blur(1px);
     }
-    .light-beam:nth-child(1) { left:18%;transform:rotate(-14deg);animation:beam-sweep 6s ease-in-out infinite; }
-    .light-beam.beam-gold { left:50%;width:6px;background:linear-gradient(180deg,transparent 0%,rgba(255,215,0,.12) 30%,rgba(255,215,0,.05) 70%,transparent 100%);transform:rotate(-2deg);animation:beam-sweep 9s ease-in-out infinite 1.5s; }
-    .light-beam.beam-3 { left:80%;transform:rotate(12deg);animation:beam-sweep 7s ease-in-out infinite 3s; }
+    .light-beam:nth-child(1) { left:15%;animation:beam-pan-1 12s ease-in-out infinite; }
+    .light-beam.beam-gold { left:48%;width:10px;background:linear-gradient(180deg,rgba(255,255,200,.12) 0%,rgba(255,215,0,.15) 20%,rgba(255,215,0,.06) 60%,transparent 100%);filter:blur(2px);animation:beam-pan-gold 18s ease-in-out infinite 2s; }
+    .light-beam.beam-3 { left:82%;animation:beam-pan-3 14s ease-in-out infinite 4s; }
+    .light-beam.beam-4 { left:32%;width:3px;background:linear-gradient(180deg,rgba(255,255,255,.08) 0%,rgba(0,200,255,.1) 30%,transparent 100%);filter:blur(.5px);animation:beam-pan-2 10s ease-in-out infinite 6s; }
 
-    /* ── ATMOSPHERE: Pitch floor glow ── */
+    /* ── ATMOSPHERE: Pitch floor with lines ── */
     .pitch-floor {
-      position:fixed;bottom:0;left:0;right:0;height:220px;
-      background:radial-gradient(ellipse 90% 70% at 50% 100%,rgba(0,60,0,.3),transparent);
-      pointer-events:none;z-index:0;
+      position:fixed;bottom:0;left:0;right:0;height:300px;pointer-events:none;z-index:0;
+      background:
+        radial-gradient(ellipse 45% 20% at 50% 100%, rgba(255,255,255,.05) 0%, transparent 100%),
+        linear-gradient(90deg, transparent 49.4%, rgba(255,255,255,.04) 49.4%, rgba(255,255,255,.04) 50.6%, transparent 50.6%),
+        radial-gradient(ellipse 100% 90% at 50% 100%, rgba(0,55,0,.45) 0%, rgba(0,30,0,.2) 50%, transparent 80%);
     }
 
-    /* ── ATMOSPHERE: Broadcast frame ── */
+    /* ── ATMOSPHERE: Broadcast frame / vignette ── */
     .broadcast-frame {
       position:fixed;inset:0;pointer-events:none;z-index:0;
-      box-shadow:inset 0 0 120px rgba(0,0,0,.6),inset 0 0 40px rgba(0,20,0,.4);
-      border:1px solid rgba(0,255,65,.04);
+      box-shadow:inset 0 0 140px rgba(0,0,0,.65),inset 0 0 50px rgba(0,15,0,.5);
+      border:1px solid rgba(0,255,65,.03);
     }
 
-    /* ── ATMOSPHERE: Trophy glow pulse ── */
-    @keyframes trophy-pulse { 0%,100%{filter:drop-shadow(0 0 22px #ffd70055)}50%{filter:drop-shadow(0 0 48px #ffd700bb)} }
-    .trophy-glow-pulse { animation:trophy-pulse 3s ease-in-out infinite; display:inline-block; }
+    /* ── ATMOSPHERE: Trophy glow + subtle rotation ── */
+    @keyframes trophy-pulse { 0%,100%{filter:drop-shadow(0 0 24px #ffd70066) drop-shadow(0 0 60px #ffd70022)}50%{filter:drop-shadow(0 0 55px #ffd700cc) drop-shadow(0 0 90px #ffd70055)} }
+    @keyframes trophy-sway { 0%,100%{transform:rotate(-1.5deg) scale(1)}50%{transform:rotate(1.5deg) scale(1.025)} }
+    .trophy-glow-pulse { animation:trophy-pulse 3s ease-in-out infinite, trophy-sway 9s ease-in-out infinite; display:inline-block; }
 
-    /* ── ATMOSPHERE: Player slots ── */
-    .player-slots { display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap; }
+    /* ── ATMOSPHERE: Stadium light flares ── */
+    @keyframes flare-blink { 0%,100%{opacity:0;transform:scale(0) rotate(0deg)} 15%,85%{opacity:1;transform:scale(1) rotate(45deg)} }
+    .flare { position:fixed;pointer-events:none;z-index:1;width:32px;height:32px; }
+    .flare::before,.flare::after { content:'';position:absolute;top:50%;left:50%;border-radius:1px; }
+    .flare::before { width:2px;height:32px;background:linear-gradient(transparent,rgba(255,215,0,.6),transparent);transform:translate(-50%,-50%); }
+    .flare::after { width:32px;height:2px;background:linear-gradient(transparent,rgba(255,215,0,.6),transparent);transform:translate(-50%,-50%); }
+    .flare-1 { top:12%;left:20%;animation:flare-blink 9s ease-in-out infinite 0s; }
+    .flare-2 { top:20%;right:16%;animation:flare-blink 13s ease-in-out infinite 5s; }
+    .flare-3 { top:8%;left:55%;animation:flare-blink 11s ease-in-out infinite 2s; }
+
+    /* ── ATMOSPHERE: Player slots (jersey shield style) ── */
+    .player-slots { display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap; }
     .player-slot {
-      width:30px;height:30px;border-radius:50%;border:1.5px solid #2a4060;
+      width:34px;height:38px;
+      border-radius:6px 6px 40% 40%;
+      border:1.5px solid #162a18;background:linear-gradient(160deg,#060f07,#030a04);
       display:flex;align-items:center;justify-content:center;
-      font-size:.8rem;color:#2a4060;transition:all .4s cubic-bezier(.2,.8,.4,1);
+      font-size:.75rem;color:#1a3020;
+      transition:all .4s cubic-bezier(.2,.8,.4,1);
       font-family:'Bebas Neue',Impact,sans-serif;
+      box-shadow:inset 0 0 6px rgba(0,0,0,.6);
     }
     .player-slot.filled {
-      background:rgba(0,255,65,.15);border-color:var(--neon);color:var(--neon);
-      box-shadow:0 0 10px rgba(0,255,65,.5),0 0 20px rgba(0,255,65,.2);
-      transform:scale(1.1);
+      background:linear-gradient(160deg,#002808,#001405);
+      border-color:var(--neon);color:var(--neon);
+      box-shadow:0 0 14px rgba(0,255,65,.7),0 0 28px rgba(0,255,65,.25),inset 0 0 8px rgba(0,255,65,.12);
+      transform:scale(1.18) translateY(-3px);
     }
+
+    /* ── Enhanced hero title pulse ── */
+    @keyframes title-pulse { 0%,100%{filter:brightness(1)}50%{filter:brightness(1.12) drop-shadow(0 0 28px rgba(255,215,0,.25))} }
+    .hero-title { animation: title-pulse 5s ease-in-out infinite; }
+
+    /* ── DRAFT GLOW pulse ── */
+    @keyframes draft-pulse { 0%,100%{text-shadow:0 0 20px rgba(0,255,65,.5),0 0 40px rgba(0,255,65,.2)}50%{text-shadow:0 0 30px rgba(0,255,65,.9),0 0 60px rgba(0,255,65,.4),0 0 90px rgba(0,255,65,.15)} }
+    .draft-glow { animation: draft-pulse 3s ease-in-out infinite; -webkit-text-fill-color: var(--neon); }
+
+    /* ── Host nations flags ── */
+    .host-nations { display:flex;align-items:center;gap:18px;justify-content:center;margin-top:10px; }
+    .host-flag { display:flex;flex-direction:column;align-items:center;gap:3px;cursor:default;transition:transform .25s,filter .25s; }
+    .host-flag .hf-emoji { font-size:2rem;line-height:1; }
+    .host-flag .hf-name { font-size:.6rem;letter-spacing:.14em;color:#3a6040;font-family:'Bebas Neue',Impact,sans-serif;text-transform:uppercase; }
+    .host-flag:hover { transform:scale(1.25);filter:drop-shadow(0 0 10px rgba(255,215,0,.7)); }
+    .host-sep { color:#1a3020;font-size:1.4rem;line-height:1; }
+
+    /* ── JOIN THE BATTLE enhanced ── */
+    .btn-battle {
+      background:transparent;border:3px solid var(--neon);color:var(--neon);
+      padding:.8rem 2.8rem;font-family:'Bebas Neue',Impact,sans-serif;font-size:1.35rem;
+      letter-spacing:.12em;cursor:pointer;transition:all .3s;position:relative;overflow:hidden;
+      box-shadow:0 0 18px rgba(0,255,65,.3),inset 0 0 18px rgba(0,255,65,.04);
+    }
+    .btn-battle::before { content:'';position:absolute;inset:0;background:var(--neon);transform:scaleX(0);transform-origin:left;transition:transform .3s;z-index:0; }
+    .btn-battle:hover { color:#000;box-shadow:0 0 40px var(--neon),0 0 80px rgba(0,255,65,.3);transform:translateY(-3px); }
+    .btn-battle:hover::before { transform:scaleX(1); }
+    .btn-battle .btn-inner { position:relative;z-index:1;display:flex;align-items:center;gap:8px; }
+    .btn-battle .ball-roll { display:inline-block;transition:transform .5s cubic-bezier(.2,.8,.4,1),opacity .3s;opacity:0;transform:translateX(-8px) rotate(0deg); }
+    .btn-battle:hover .ball-roll { opacity:1;transform:translateX(4px) rotate(360deg); }
+
+    /* ── HOST LOGIN enhanced ── */
+    .btn-host {
+      background:transparent;border:2px solid var(--red);color:var(--red);
+      padding:.65rem 1.8rem;font-family:'Bebas Neue',Impact,sans-serif;font-size:1.15rem;
+      letter-spacing:.1em;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;
+    }
+    .btn-host:hover { background:var(--red);color:#fff;box-shadow:0 0 20px rgba(255,34,68,.5);transform:translateY(-2px); }
+    .btn-host .lock-icon { display:inline-block;transition:transform .4s cubic-bezier(.2,.8,.4,1); }
+    .btn-host:hover .lock-icon { transform:rotate(-20deg) scale(1.3); }
+
+    /* ── Scoreboard counter ── */
+    .scoreboard {
+      background:linear-gradient(160deg,rgba(0,8,4,.95),rgba(0,16,8,.9));
+      border:1px solid #1a3a1a;border-radius:8px;
+      padding:18px 28px;text-align:center;margin-top:20px;
+      box-shadow:0 0 30px rgba(0,255,65,.07),inset 0 0 30px rgba(0,0,0,.5);
+      position:relative;overflow:hidden;
+    }
+    .scoreboard::before { content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,255,65,.3),transparent); }
+    .scoreboard-label { font-family:'Bebas Neue',Impact,sans-serif;font-size:.7rem;letter-spacing:.22em;color:#2a5030;margin-bottom:4px; }
+    .scoreboard-num { font-family:'Bebas Neue',Impact,sans-serif;font-size:3.2rem;line-height:1;color:var(--neon);text-shadow:0 0 20px var(--neon),0 0 50px rgba(0,255,65,.3); }
+    .scoreboard-bar { height:5px;background:#050e06;border-radius:3px;overflow:hidden;margin-top:10px;position:relative; }
+    .scoreboard-fill { height:100%;background:linear-gradient(90deg,#004d14,var(--neon));border-radius:3px;transition:width .6s cubic-bezier(.2,.8,.4,1);box-shadow:0 0 10px var(--neon),0 0 20px rgba(0,255,65,.4);position:relative; }
+    .scoreboard-fill::after { content:'';position:absolute;right:0;top:0;bottom:0;width:3px;background:rgba(255,255,255,.7);border-radius:2px; }
 
     /* ── ATMOSPHERE: Draw loading screen ── */
     @keyframes draw-spin { to{transform:rotate(360deg)} }
@@ -228,6 +306,10 @@ body,h1,h2,h3,p{margin:0;padding:0}
 <div class="light-beam beam-3"></div>
 <div class="pitch-floor"></div>
 <div class="broadcast-frame"></div>
+<div class="light-beam beam-4"></div>
+<div class="flare flare-1"></div>
+<div class="flare flare-2"></div>
+<div class="flare flare-3"></div>
 <canvas id="particle-canvas" style="position:fixed;inset:0;pointer-events:none;z-index:3"></canvas>
 <div id="draw-loading">
   <span class="draw-trophy">🏆</span>
@@ -281,16 +363,24 @@ body,h1,h2,h3,p{margin:0;padding:0}
     <div class="mb-2 text-sm tracking-widest uppercase" style="color:var(--blue)">⚡ Private Tournament · 8 Players · Fair Draw</div>
     <h1 class="hero-title bebas">WORLD CUP<br>2026<br><span class="draft-glow" style="font-size:60%">PRIVATE DRAFT</span></h1>
     <p class="mt-6 text-lg max-w-md mx-auto" style="color:#7a9ab8">48 nations. 6 tiers. One champion. Every squad decided by fate.</p>
-    <p class="mt-1 text-sm tracking-widest uppercase" style="color:#3a5a70">🇺🇸 USA &nbsp;·&nbsp; 🇲🇽 Mexico &nbsp;·&nbsp; 🇨🇦 Canada</p>
-    <div class="mt-10 flex flex-col sm:flex-row gap-4 items-center justify-center">
-      <button class="btn-neon pulse-neon" onclick="App.openRegisterModal()" onmouseenter="spawnParticles(this)">⚡ JOIN THE BATTLE</button>
-      <button class="btn-red" onclick="App.openHostModal()">🔐 HOST LOGIN</button>
+    <div class="host-nations">
+      <span class="host-flag"><span class="hf-emoji">🇺🇸</span><span class="hf-name">USA</span></span>
+      <span class="host-sep">·</span>
+      <span class="host-flag"><span class="hf-emoji">🇲🇽</span><span class="hf-name">Mexico</span></span>
+      <span class="host-sep">·</span>
+      <span class="host-flag"><span class="hf-emoji">🇨🇦</span><span class="hf-name">Canada</span></span>
     </div>
-    <div class="mt-12">
-      <div class="text-xs uppercase tracking-widest mb-2" style="color:#3a5a70">Players Registered</div>
-      <div class="text-3xl font-bold bebas" id="landing-counter" style="color:var(--neon)">0 / 8</div>
-      <div class="prog-track mt-2 mx-auto" style="width:200px">
-        <div class="prog-fill prog-fill-glow" id="landing-progress" style="width:0%"></div>
+    <div class="mt-10 flex flex-col sm:flex-row gap-4 items-center justify-center">
+      <button class="btn-battle pulse-neon" onclick="App.openRegisterModal()" onmouseenter="spawnParticles(this)">
+        <span class="btn-inner"><span>⚡</span><span class="ball-roll">⚽</span> JOIN THE BATTLE</span>
+      </button>
+      <button class="btn-host" onclick="App.openHostModal()"><span class="lock-icon">🔐</span> HOST LOGIN</button>
+    </div>
+    <div class="scoreboard mx-auto" style="max-width:260px">
+      <div class="scoreboard-label">Players Registered</div>
+      <div class="scoreboard-num" id="landing-counter">0 / 8</div>
+      <div class="scoreboard-bar">
+        <div class="scoreboard-fill" id="landing-progress" style="width:0%"></div>
       </div>
       <div class="player-slots" id="player-slots">
         <div class="player-slot" id="slot-0">·</div>
@@ -460,9 +550,28 @@ const WS_URL = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.h
   for (let i=0;i<18;i++) balls.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4,size:12+Math.random()*28,opacity:.08+Math.random()*.18,rot:Math.random()*Math.PI*2,rs:(Math.random()-.5)*.015,type:i%3===0?'trophy':'ball'});
   function drawBall(ctx,b) {
     const s=b.size;
-    ctx.beginPath();ctx.arc(0,0,s,0,Math.PI*2);ctx.strokeStyle='#00ff41';ctx.lineWidth=1.2;ctx.stroke();
-    ctx.beginPath();for(let i=0;i<5;i++){const a=(i/5)*Math.PI*2-Math.PI/2;i?ctx.lineTo(Math.cos(a)*s*.38,Math.sin(a)*s*.38):ctx.moveTo(Math.cos(a)*s*.38,Math.sin(a)*s*.38);}ctx.closePath();ctx.strokeStyle='#00ff41';ctx.lineWidth=.7;ctx.stroke();
-    for(let i=0;i<5;i++){const a=(i/5)*Math.PI*2-Math.PI/2;ctx.beginPath();ctx.moveTo(Math.cos(a)*s*.38,Math.sin(a)*s*.38);ctx.lineTo(Math.cos(a)*s*.85,Math.sin(a)*s*.85);ctx.strokeStyle='#00ff41';ctx.lineWidth=.6;ctx.stroke();}
+    // white ball base
+    ctx.beginPath();ctx.arc(0,0,s,0,Math.PI*2);
+    ctx.fillStyle='rgba(0,30,10,.15)';ctx.fill();
+    ctx.strokeStyle='rgba(0,255,65,.5)';ctx.lineWidth=1.2;ctx.stroke();
+    // black pentagon panels (classic ball pattern)
+    ctx.fillStyle='rgba(0,200,50,.22)';
+    for(let i=0;i<5;i++){
+      const a=(i/5)*Math.PI*2-Math.PI/2;
+      const px=Math.cos(a)*s*.42, py=Math.sin(a)*s*.42;
+      ctx.beginPath();
+      for(let j=0;j<5;j++){
+        const pa=(j/5)*Math.PI*2-Math.PI/2;
+        j===0?ctx.moveTo(px+Math.cos(pa)*s*.22,py+Math.sin(pa)*s*.22):ctx.lineTo(px+Math.cos(pa)*s*.22,py+Math.sin(pa)*s*.22);
+      }
+      ctx.closePath();ctx.fill();
+      ctx.strokeStyle='rgba(0,255,65,.3)';ctx.lineWidth=.5;ctx.stroke();
+    }
+    // center pentagon
+    ctx.beginPath();
+    for(let i=0;i<5;i++){const a=(i/5)*Math.PI*2-Math.PI/2;i?ctx.lineTo(Math.cos(a)*s*.22,Math.sin(a)*s*.22):ctx.moveTo(Math.cos(a)*s*.22,Math.sin(a)*s*.22);}
+    ctx.closePath();ctx.fillStyle='rgba(0,180,40,.3)';ctx.fill();
+    ctx.strokeStyle='rgba(0,255,65,.4)';ctx.lineWidth=.6;ctx.stroke();
   }
   function drawTrophy(ctx,b) {
     const s=b.size;
