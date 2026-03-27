@@ -1,0 +1,24 @@
+{
+  "name": "World Cup 2026 Private Draft",
+  "short_name": "WC2026 Draft",
+  "description": "Private 8-player World Cup 2026 fantasy draft tournament",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#04080a",
+  "theme_color": "#00ff41",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -319,6 +319,23 @@ def serve_frontend():
         return FileResponse(html_path, media_type="text/html")
     return HTMLResponse("<h1>Frontend not found</h1>", status_code=404)
 
+@app.get("/manifest.json")
+def serve_manifest():
+    p = Path(__file__).parent / "manifest.json"
+    return FileResponse(p, media_type="application/manifest+json")
+
+@app.get("/sw.js")
+def serve_sw():
+    p = Path(__file__).parent / "sw.js"
+    return FileResponse(p, media_type="application/javascript")
+
+@app.get("/icons/{filename}")
+def serve_icon(filename: str):
+    p = Path(__file__).parent / "icons" / filename
+    if not p.exists() or not p.suffix == ".png":
+        raise HTTPException(404)
+    return FileResponse(p, media_type="image/png")
+
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------

@@ -4,6 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>WORLD CUP 2026 – PRIVATE DRAFT</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#00ff41" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="WC2026 Draft" />
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
   <style id="tw-minimal">
 /* ── Tailwind utility replacement (no CDN/eval needed) ── */
 *,::before,::after{box-sizing:border-box}
@@ -999,6 +1008,11 @@ sb.onclick=()=>{
   sb.style.borderColor=soundEnabled?'var(--neon)':'#1e3040';
 };
 document.body.appendChild(sb);
+
+/* ── Service Worker registration ── */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
 </script>
 
 </body>
