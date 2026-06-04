@@ -283,6 +283,13 @@ async def api_reset(req: HostRequest):
     return {"ok": True}
 
 
+@app.post("/api/verify-host")
+def api_verify_host(req: HostRequest):
+    if req.password != HOST_PASSWORD:
+        raise HTTPException(403, "Wrong password")
+    return {"ok": True}
+
+
 @app.get("/api/health")
 def api_health():
     players = db_get_players()

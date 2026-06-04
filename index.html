@@ -517,9 +517,9 @@ body,h1,h2,h3,p{margin:0;padding:0}
       <input id="reg-email" type="email" placeholder="Email Address" />
     </div>
     <div id="reg-error" class="text-sm mt-3 hidden" style="color:var(--red)"></div>
-    <button class="btn-neon w-full mt-5" onclick="App.register()">⚡ REGISTER NOW</button>
+    <button id="btn-register" class="btn-neon w-full mt-5" onclick="App.register()">⚡ JOIN THE DRAFT</button>
     <p class="text-xs mt-4 text-center" style="color:#3a5a70">Already registered? Enter your email and click login.</p>
-    <button class="btn-red w-full mt-2" onclick="App.loginExisting()">LOGIN WITH EMAIL</button>
+    <button id="btn-login" class="btn-red w-full mt-2" onclick="App.loginExisting()">🔑 ALREADY REGISTERED</button>
   </div>
 </div>
 
@@ -753,6 +753,7 @@ const App = {
       if (player && squad) this.renderSquad(player, squad);
     }
     if (type === 'draw_complete') {
+      if(this._drawTimeout){clearTimeout(this._drawTimeout);this._drawTimeout=null;}
       document.getElementById('draw-loading').classList.remove('active');
       toast("🏆 SQUADS DRAWN! Destiny decided!", 6000);
       Confetti.burst();
@@ -778,9 +779,11 @@ const App = {
     const name=document.getElementById('reg-name').value.trim();
     const email=document.getElementById('reg-email').value.trim();
     const err=document.getElementById('reg-error');
+    const btn=document.getElementById('btn-register');
     err.classList.add('hidden');
     if(!name){err.textContent='⚠️ Enter your name';err.classList.remove('hidden');return;}
     if(!email||!email.includes('@')){err.textContent='⚠️ Enter a valid email';err.classList.remove('hidden');return;}
+    if(btn){btn.disabled=true;btn.textContent='Registering…';}
     try {
       const r = await fetch(`${API}/api/register`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email})});
       const body = await r.json();
@@ -790,12 +793,15 @@ const App = {
       toast(`⚡ Welcome, ${name}! You're in.`);
       this.showDashboard();
     } catch(e){err.textContent='❌ Server error — try again';err.classList.remove('hidden');}
+    finally{if(btn){btn.disabled=false;btn.textContent='⚡ JOIN THE DRAFT';}}
   },
   async loginExisting() {
     const email=document.getElementById('reg-email').value.trim();
     const err=document.getElementById('reg-error');
+    const btn=document.getElementById('btn-login');
     err.classList.add('hidden');
     if(!email){err.textContent='⚠️ Enter your email to login';err.classList.remove('hidden');return;}
+    if(btn){btn.disabled=true;btn.textContent='Finding you…';}
     try {
       const r=await fetch(`${API}/api/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
       const body=await r.json();
@@ -805,17 +811,29 @@ const App = {
       toast(`🏆 Welcome back, ${body.player.name}!`);
       this.showDashboard();
     } catch{err.textContent='❌ Server error';err.classList.remove('hidden');}
+    finally{if(btn){btn.disabled=false;btn.textContent='🔑 ALREADY REGISTERED';}}
   },
   logout() { this.currentPlayer=null; this._hostVerified=false; this.showPage('page-landing'); },
 
-  verifyHost() {
+  async verifyHost() {
     const pass=document.getElementById('host-pass').value;
-    this._hostPass=pass;
-    this._hostVerified=true;
-    this.closeModal('modal-host');
-    toast("🔐 Host access granted");
-    if(document.getElementById('page-dashboard').classList.contains('hidden')) this.showDashboard();
-    else this.renderDashboard();
+    if(!pass){toast("❌ Enter the host password");return;}
+    const btn=document.querySelector('#modal-host .btn-gold');
+    if(btn){btn.disabled=true;btn.textContent='Checking…';}
+    try {
+      const r=await fetch(`${API}/api/verify-host`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pass})});
+      if(!r.ok){toast("❌ Wrong password");return;}
+      this._hostPass=pass;
+      this._hostVerified=true;
+      this.closeModal('modal-host');
+      toast("🔐 Host access granted");
+      if(document.getElementById('page-dashboard').classList.contains('hidden')) this.showDashboard();
+      else this.renderDashboard();
+    } catch(e){
+      toast("❌ Cannot reach server");
+    } finally {
+      if(btn){btn.disabled=false;btn.textContent='🔐 UNLOCK';}
+    }
   },
   async resetTournament() {
     const pass=document.getElementById('host-pass').value;
@@ -834,16 +852,22 @@ const App = {
   async triggerDraw() {
     if(this._state.count<8){toast("Need 8 players first!");return;}
     if(!confirm('🎲 DRAW THE SQUADS?\n\nRandomly assign 6 teams to each player.\nThis cannot be undone!'))return;
-    document.getElementById('draw-loading').classList.add('active');
+    const loadingEl=document.getElementById('draw-loading');
+    loadingEl.classList.add('active');
+    // Safety timeout — hide overlay after 15s if WS draw_complete never arrives
+    const drawTimeout=setTimeout(()=>{loadingEl.classList.remove('active');toast("⚠️ Draw may have completed — refresh to confirm");},15000);
     try {
       const r=await fetch(`${API}/api/draw`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:this._hostPass||''})});
       if(!r.ok){
-        document.getElementById('draw-loading').classList.remove('active');
+        clearTimeout(drawTimeout);
+        loadingEl.classList.remove('active');
         const b=await r.json();toast(`❌ ${b.detail}`);return;
       }
-      // draw-loading hides when WS broadcasts draw_complete
+      // draw-loading hides when WS broadcasts draw_complete (clearTimeout called there)
+      this._drawTimeout=drawTimeout;
     } catch{
-      document.getElementById('draw-loading').classList.remove('active');
+      clearTimeout(drawTimeout);
+      loadingEl.classList.remove('active');
       toast("❌ Draw failed — check connection");
     }
   },
