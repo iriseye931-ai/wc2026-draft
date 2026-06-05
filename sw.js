@@ -1,6 +1,6 @@
 /* WC2026 Draft — Service Worker */
-const CACHE = 'wc2026-v1';
-const PRECACHE = ['/', '/manifest.json', '/icons/icon-192.png', '/icons/icon-512.png'];
+const CACHE = 'wc2026-v2';
+const PRECACHE = ['/', '/manifest.json', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/trophy.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(PRECACHE)));

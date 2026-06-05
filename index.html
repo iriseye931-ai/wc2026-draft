@@ -372,65 +372,19 @@ body,h1,h2,h3,p{margin:0;padding:0}
             <stop offset="62%"  stop-color="#c08010"/>
             <stop offset="100%" stop-color="#7a5200"/>
           </linearGradient>
-          <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%"   stop-color="#9a6400"/>
-            <stop offset="22%"  stop-color="#e8b000"/>
-            <stop offset="50%"  stop-color="#fff5c0"/>
-            <stop offset="78%"  stop-color="#e8b000"/>
-            <stop offset="100%" stop-color="#9a6400"/>
-          </linearGradient>
-          <radialGradient id="g3" cx="36%" cy="30%" r="66%">
-            <stop offset="0%"   stop-color="#fffce8"/>
-            <stop offset="45%"  stop-color="#ffd700"/>
-            <stop offset="100%" stop-color="#8a6000"/>
-          </radialGradient>
+          <filter id="tglow" x="-20%" y="-10%" width="140%" height="130%">
+            <feDropShadow dx="0" dy="2" stdDeviation="7" flood-color="#ffd700" flood-opacity="0.55"/>
+            <feDropShadow dx="0" dy="0" stdDeviation="14" flood-color="#ffaa00" flood-opacity="0.25"/>
+          </filter>
         </defs>
 
-        <!-- Host nation arches: USA Blue · Mexico Green · Canada Red (3 distinct colors) -->
+        <!-- Host nation arches: USA Blue · Mexico Green · Canada Red -->
         <path d="M44,160 Q150,8  256,160" fill="none" stroke="#002868" stroke-width="15"  stroke-linecap="round" opacity="0.92"/>
         <path d="M58,160 Q150,26 242,160" fill="none" stroke="#006847" stroke-width="11"  stroke-linecap="round" opacity="0.92"/>
         <path d="M70,160 Q150,42 230,160" fill="none" stroke="#FF0000" stroke-width="7.5" stroke-linecap="round" opacity="0.78"/>
 
-        <!-- ── Real FIFA World Cup Trophy (Gazzaniga design) ── -->
-
-        <!-- Globe held aloft at top -->
-        <circle cx="150" cy="76" r="27" fill="url(#g3)" stroke="url(#g1)" stroke-width="1.8"/>
-        <path d="M150,49 C158,57 162,66 160,76 C162,86 158,95 150,103" fill="none" stroke="rgba(0,0,0,.13)" stroke-width="1.3"/>
-        <path d="M150,49 C142,57 138,66 140,76 C138,86 142,95 150,103" fill="none" stroke="rgba(0,0,0,.13)" stroke-width="1.3"/>
-        <ellipse cx="150" cy="76" rx="27" ry="9" fill="none" stroke="rgba(0,0,0,.1)" stroke-width="1"/>
-        <circle cx="142" cy="66" r="8.5" fill="rgba(255,255,255,.3)"/>
-
-        <!-- Left figure: sweeps outward from column then curves up to globe -->
-        <path d="M140,206 C132,204 118,193 104,176 C90,159 84,140 88,124 C92,109 104,99 118,96 C126,93 134,96 138,106 L140,206" fill="url(#g2)"/>
-        <path d="M138,106 C136,116 137,132 139,152 L140,206 L136,206 C134,186 132,166 132,148 C130,128 131,114 132,103" fill="rgba(255,255,255,.07)"/>
-        <!-- Left arm up to globe -->
-        <path d="M118,96 C126,84 134,78 142,74" fill="none" stroke="url(#g2)" stroke-width="12" stroke-linecap="round"/>
-
-        <!-- Right figure: mirrors left -->
-        <path d="M160,206 C168,204 182,193 196,176 C210,159 216,140 212,124 C208,109 196,99 182,96 C174,93 166,96 162,106 L160,206" fill="url(#g2)"/>
-        <path d="M162,106 C164,116 163,132 161,152 L160,206 L164,206 C166,186 168,166 168,148 C170,128 169,114 168,103" fill="rgba(255,255,255,.07)"/>
-        <!-- Right arm up to globe -->
-        <path d="M182,96 C174,84 166,78 158,74" fill="none" stroke="url(#g2)" stroke-width="12" stroke-linecap="round"/>
-
-        <!-- Column connecting figures to base -->
-        <rect x="137" y="206" width="26" height="28" rx="2" fill="url(#g1)"/>
-        <rect x="137" y="206" width="5"  height="28" rx="1" fill="rgba(0,0,0,.12)"/>
-
-        <!-- Base transition wedge -->
-        <path d="M126,234 L174,234 L178,247 L122,247 Z" fill="url(#g1)"/>
-
-        <!-- Malachite bands — signature green marble of the real trophy -->
-        <rect x="106" y="247" width="88" height="15" rx="1" fill="#2e7d52"/>
-        <rect x="106" y="250" width="88" height="1.5" fill="rgba(255,255,255,.18)"/>
-        <rect x="100" y="262" width="100" height="14" rx="1" fill="#1a5c38"/>
-        <rect x="100" y="265" width="100" height="1.5" fill="rgba(255,255,255,.15)"/>
-
-        <!-- Gold base tiers -->
-        <rect x="94"  y="276" width="112" height="9"  rx="1" fill="url(#g1)"/>
-        <rect x="82"  y="285" width="136" height="20" rx="3" fill="url(#g1)"/>
-        <rect x="82"  y="288" width="136" height="1.8" fill="rgba(255,255,255,.3)"/>
-        <rect x="82"  y="294" width="136" height="1"   fill="rgba(255,255,255,.16)"/>
-        <rect x="78"  y="305" width="144" height="5"   rx="2" fill="rgba(0,0,0,.25)"/>
+        <!-- Real FIFA World Cup Trophy photograph -->
+        <image href="/icons/trophy.png" x="53" y="5" width="194" height="279" preserveAspectRatio="xMidYMid meet" filter="url(#tglow)"/>
 
         <!-- "2026" -->
         <text x="150" y="337" text-anchor="middle" font-size="66" font-weight="900"
