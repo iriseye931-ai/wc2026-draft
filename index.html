@@ -489,17 +489,51 @@ body,h1,h2,h3,p{margin:0;padding:0}
       <div id="view-squad-zone" class="hidden">
         <button class="btn-neon" onclick="App.showSquad()">⚽ VIEW MY SQUAD</button>
       </div>
+      <!-- Finals control — host only, post-draw -->
+      <div id="finals-zone" class="hidden mt-4 p-4 text-left" style="background:#070e10;border:1px solid var(--gold)33;border-radius:6px;min-width:280px">
+        <div class="text-xs uppercase tracking-widest mb-3" style="color:var(--gold)">🏟️ Finals Tracker</div>
+        <div id="finals-set-ui">
+          <div class="text-xs mb-2" style="color:#5a8aaa">Set the two finalists:</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+            <select id="finalist-1-sel" style="background:#0d1117;border:1px solid #2a4060;color:#e2e8f0;padding:5px 8px;border-radius:4px;font-size:11px;font-family:monospace;flex:1;min-width:100px"></select>
+            <select id="finalist-2-sel" style="background:#0d1117;border:1px solid #2a4060;color:#e2e8f0;padding:5px 8px;border-radius:4px;font-size:11px;font-family:monospace;flex:1;min-width:100px"></select>
+            <button onclick="App.setFinalists()" style="font-size:.75rem;padding:5px 12px;background:var(--gold);color:#000;border:none;border-radius:4px;cursor:pointer;font-family:'Bebas Neue',Impact,sans-serif;letter-spacing:.05em;white-space:nowrap">SET FINAL</button>
+          </div>
+        </div>
+        <div id="finals-champion-ui" class="hidden mt-3">
+          <div class="text-xs mb-2" style="color:#5a8aaa">Who won the final?</div>
+          <div style="display:flex;gap:6px">
+            <button id="champ-btn-1" onclick="App.setChampion(1)" style="flex:1;font-size:.8rem;padding:6px 10px;background:#00ff4122;border:1px solid var(--neon);color:var(--neon);border-radius:4px;cursor:pointer;font-family:'Bebas Neue',Impact,sans-serif"></button>
+            <button id="champ-btn-2" onclick="App.setChampion(2)" style="flex:1;font-size:.8rem;padding:6px 10px;background:#ffd70022;border:1px solid var(--gold);color:var(--gold);border-radius:4px;cursor:pointer;font-family:'Bebas Neue',Impact,sans-serif"></button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="mb-4 text-xs uppercase tracking-widest" style="color:#3a5a70">Registered Players</div>
     <div id="players-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
     <div id="empty-slots" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
 
+    <!-- Prize pool banner — always visible post-draw -->
+    <div id="prize-banner" class="hidden mt-8 p-4 text-center" style="background:linear-gradient(135deg,#0a1a08,#0a100a);border:1px solid var(--gold)44;border-radius:6px">
+      <div class="text-xs uppercase tracking-widest mb-2" style="color:var(--gold)44;letter-spacing:.2em">Prize Pool</div>
+      <div style="display:flex;justify-content:center;gap:24px;align-items:center">
+        <div><div style="font-family:'Bebas Neue',Impact,sans-serif;font-size:1.5rem;color:var(--gold)">🥇 $250</div><div style="font-size:.65rem;color:#5a8aaa;text-transform:uppercase;letter-spacing:.1em">Champion's Team</div></div>
+        <div style="color:#2a4060;font-size:1.2rem">·</div>
+        <div><div style="font-family:'Bebas Neue',Impact,sans-serif;font-size:1.5rem;color:#94a3b8">🥈 $50</div><div style="font-size:.65rem;color:#5a8aaa;text-transform:uppercase;letter-spacing:.1em">Runner-up's Team</div></div>
+      </div>
+      <div class="text-xs mt-3" style="color:#3a5a70">Get one of your 4 teams to the Final to win a prize</div>
+      <div id="finalist-banner" class="hidden mt-3 p-3 rounded" style="background:#0d1a0d;border:1px solid var(--neon)33">
+        <div class="text-xs uppercase tracking-widest mb-2" style="color:var(--neon);letter-spacing:.15em">🏟️ The Final Is Set</div>
+        <div id="finalist-banner-content" style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap"></div>
+      </div>
+    </div>
+
     <!-- Squad Standings — visible post-draw -->
-    <div id="standings-section" class="hidden mt-8">
+    <div id="standings-section" class="hidden mt-6">
       <div class="mb-3 flex items-center justify-between">
         <div class="text-xs uppercase tracking-widest" style="color:#3a5a70">📊 Squad Standings</div>
-        <div class="text-xs" style="color:#2a4060">Based on FIFA team ratings within each tier</div>
+        <div class="text-xs" style="color:#2a4060">Based on FIFA team ratings</div>
       </div>
       <div id="standings-list" class="flex flex-col gap-2"></div>
     </div>
@@ -517,7 +551,8 @@ body,h1,h2,h3,p{margin:0;padding:0}
     <div class="text-center mb-8">
       <div class="text-6xl mb-2" id="squad-initial"></div>
       <h2 class="text-4xl bebas glow-gold" style="color:var(--gold)" id="squad-player-name"></h2>
-      <div class="text-sm mt-1" style="color:#5a8aaa">6 NATIONS · WORLD CUP 2026</div>
+      <div class="text-sm mt-1" style="color:#5a8aaa">4 NATIONS · WORLD CUP 2026</div>
+      <div id="squad-finalist-banner" class="hidden mt-3 px-4 py-2 rounded" style="background:#0d1a0d;border:1px solid var(--neon)66;font-family:'Bebas Neue',Impact,sans-serif;letter-spacing:.08em"></div>
       <div id="squad-score-badge" class="mt-3 hidden" style="display:inline-flex;flex-direction:column;align-items:center;gap:4px">
         <div style="font-family:'Bebas Neue',Impact,sans-serif;font-size:.65rem;letter-spacing:.18em;color:#3a5a70">SQUAD RATING</div>
         <div id="squad-score-bar-wrap" style="width:200px;height:6px;background:#1e3040;border-radius:3px;overflow:hidden">
@@ -581,6 +616,7 @@ const TIER_META = {
   tier3:{label:"DARK HORSES", short:"T3",color:"var(--neon)",cls:"t3"},
   tier4:{label:"WILDCARDS",   short:"T4",color:"#cc44ff",    cls:"t4"},
 };
+const TIERS_FLAT = ["Brazil","France","England","Argentina","Spain","Germany","Portugal","Belgium","Netherlands","Italy","Croatia","Uruguay","Denmark","Mexico","USA","Japan","Colombia","Morocco","Senegal","Switzerland","Poland","Sweden","Serbia","Iran","South Korea","Australia","Egypt","Nigeria","Cameroon","Ghana","Tunisia","Algeria","Peru","Chile","Ecuador","Paraguay","Venezuela","Bolivia","Costa Rica","Panama","Canada","Jamaica","Honduras","Saudi Arabia","Uzbekistan","Iraq","Qatar","New Zealand"];
 
 const FLAGS = {
   "Brazil":"🇧🇷","France":"🇫🇷","England":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","Argentina":"🇦🇷","Spain":"🇪🇸","Germany":"🇩🇪",
@@ -787,7 +823,7 @@ const App = {
     ws.onmessage = (e) => {
       try {
         const msg = JSON.parse(e.data);
-        this._state = { players: msg.players||[], squads: msg.squads||{}, draw_done: msg.draw_done||false, count: msg.count||0 };
+        this._state = { players: msg.players||[], squads: msg.squads||{}, draw_done: msg.draw_done||false, count: msg.count||0, finalist_1: msg.finalist_1||'', finalist_2: msg.finalist_2||'', champion: msg.champion||'' };
         this.onStateUpdate(msg.type);
       } catch{}
     };
@@ -821,6 +857,14 @@ const App = {
       if(this._drawTimeout){clearTimeout(this._drawTimeout);this._drawTimeout=null;}
       document.getElementById('draw-loading').classList.remove('active');
       toast("🏆 SQUADS DRAWN! Destiny decided!", 6000);
+      Confetti.burst();
+    }
+    if (type === 'finals_set') {
+      toast(`🏟️ THE FINAL IS SET: ${this._state.finalist_1} vs ${this._state.finalist_2}`, 7000);
+      Confetti.burst();
+    }
+    if (type === 'champion_set') {
+      toast(`🏆 ${this._state.champion.toUpperCase()} ARE WORLD CHAMPIONS!`, 9000);
       Confetti.burst();
     }
   },
@@ -930,7 +974,7 @@ const App = {
 
   async triggerDraw() {
     if(this._state.count<12){toast("Need 12 players first!");return;}
-    if(!confirm('🎲 DRAW THE SQUADS?\n\nRandomly assign 6 teams to each player.\nThis cannot be undone!'))return;
+    if(!confirm('🎲 DRAW THE SQUADS?\n\nRandomly assign 4 teams to each player.\nThis cannot be undone!'))return;
     const loadingEl=document.getElementById('draw-loading');
     loadingEl.classList.add('active');
     // Safety timeout — hide overlay after 15s if WS draw_complete never arrives
@@ -951,8 +995,29 @@ const App = {
     }
   },
 
+  async setFinalists() {
+    const f1 = document.getElementById('finalist-1-sel').value;
+    const f2 = document.getElementById('finalist-2-sel').value;
+    if (!f1 || !f2) { toast("Select both teams"); return; }
+    if (f1 === f2) { toast("Must be two different teams"); return; }
+    try {
+      const r = await fetch(`${API}/api/set-finalists`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:this._hostPass||'',finalist_1:f1,finalist_2:f2})});
+      if (!r.ok) { const b=await r.json(); toast(`❌ ${b.detail}`); return; }
+    } catch { toast("❌ Error setting finalists"); }
+  },
+
+  async setChampion(slot) {
+    const team = slot === 1 ? this._state.finalist_1 : this._state.finalist_2;
+    if (!team) return;
+    if (!confirm(`🏆 Confirm: ${team} won the World Cup?`)) return;
+    try {
+      const r = await fetch(`${API}/api/set-champion`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:this._hostPass||'',champion:team})});
+      if (!r.ok) { const b=await r.json(); toast(`❌ ${b.detail}`); return; }
+    } catch { toast("❌ Error setting champion"); }
+  },
+
   renderDashboard() {
-    const {players, squads, draw_done, count} = this._state;
+    const {players, squads, draw_done, count, finalist_1, finalist_2, champion} = this._state;
     const cp = this.currentPlayer;
     document.getElementById('topbar-name').textContent = cp ? cp.name : (this._hostVerified ? '[ HOST ]' : '?');
     document.getElementById('dash-counter').textContent = count;
@@ -971,6 +1036,68 @@ const App = {
       const btn=document.getElementById('btn-draw');btn.disabled=count<12;
       document.getElementById('draw-hint').textContent=count<12?`Waiting for ${12-count} more player${12-count>1?'s':''}`:'🎲 All in — ready to draw!';
     } else {drawZone.classList.add('hidden');viewZone.classList.add('hidden');}
+
+    // Finals zone — host only, post-draw
+    const finalsZone = document.getElementById('finals-zone');
+    if (this._hostVerified && draw_done) {
+      finalsZone.classList.remove('hidden');
+      const allTeams = Object.values(TIERS_FLAT);
+      const makeOpts = (selId, exclude) => {
+        const sel = document.getElementById(selId);
+        const cur = sel.value;
+        sel.innerHTML = '<option value="">— Pick team —</option>' + allTeams.map(t=>`<option value="${t}"${t===cur?' selected':''}>${FLAGS[t]||''} ${t}</option>`).join('');
+        if (!cur && exclude) {} // leave as default
+      };
+      makeOpts('finalist-1-sel', finalist_2);
+      makeOpts('finalist-2-sel', finalist_1);
+      // If finalists already set, pre-select and show champion buttons
+      if (finalist_1) document.getElementById('finalist-1-sel').value = finalist_1;
+      if (finalist_2) document.getElementById('finalist-2-sel').value = finalist_2;
+      const champUi = document.getElementById('finals-champion-ui');
+      if (finalist_1 && finalist_2) {
+        champUi.classList.remove('hidden');
+        const b1 = document.getElementById('champ-btn-1');
+        const b2 = document.getElementById('champ-btn-2');
+        b1.textContent = `🏆 ${FLAGS[finalist_1]||''} ${finalist_1}`;
+        b2.textContent = `🏆 ${FLAGS[finalist_2]||''} ${finalist_2}`;
+        if (champion) {
+          b1.style.opacity = finalist_1===champion?'1':'0.35';
+          b2.style.opacity = finalist_2===champion?'1':'0.35';
+        }
+      } else {
+        champUi.classList.add('hidden');
+      }
+    } else {
+      finalsZone.classList.add('hidden');
+    }
+
+    // Prize banner — post-draw
+    const prizeBanner = document.getElementById('prize-banner');
+    const finalistBanner = document.getElementById('finalist-banner');
+    const finalistContent = document.getElementById('finalist-banner-content');
+    if (draw_done) {
+      prizeBanner.classList.remove('hidden');
+      if (finalist_1 && finalist_2) {
+        finalistBanner.classList.remove('hidden');
+        const ownerOf = (team) => players.find(p => squads[p.id] && Object.values(squads[p.id]).includes(team));
+        const o1 = ownerOf(finalist_1), o2 = ownerOf(finalist_2);
+        const isChamp1 = champion === finalist_1, isChamp2 = champion === finalist_2;
+        finalistContent.innerHTML = [
+          {team: finalist_1, owner: o1, isChamp: isChamp1, prize: isChamp1?'🥇 $250':'🥈 $50'},
+          {team: finalist_2, owner: o2, isChamp: isChamp2, prize: isChamp2?'🥇 $250':'🥈 $50'},
+        ].map(({team,owner,isChamp,prize})=>`
+          <div style="background:${isChamp?'#1a3010':'#0d1a0d'};border:1px solid ${isChamp?'var(--gold)':'var(--neon)'}44;border-radius:4px;padding:8px 12px;min-width:130px">
+            <div style="font-size:1.4rem">${FLAGS[team]||'🏳️'}</div>
+            <div style="font-family:'Bebas Neue',Impact,sans-serif;font-size:.85rem;color:${isChamp?'var(--gold)':'var(--neon)'};">${team}</div>
+            ${owner?`<div style="font-size:.65rem;color:#5a8aaa;margin-top:2px">${owner.name}</div>`:''}
+            ${champion?`<div style="font-family:'Bebas Neue',Impact,sans-serif;font-size:.8rem;color:${isChamp?'var(--gold)':'#5a8aaa'};margin-top:2px">${prize}</div>`:''}
+          </div>`).join('');
+      } else {
+        finalistBanner.classList.add('hidden');
+      }
+    } else {
+      prizeBanner.classList.add('hidden');
+    }
 
     const grid=document.getElementById('players-grid');
     const slots=document.getElementById('empty-slots');
@@ -1054,9 +1181,33 @@ const App = {
 
   renderSquad(player, squad) {
     const isMySquad = player.id === this.currentPlayer?.id;
+    const {finalist_1, finalist_2, champion} = this._state;
+    const myTeams = Object.values(squad||{});
+    const myFinalist = myTeams.find(t => t===finalist_1 || t===finalist_2);
+    const myChampion = myTeams.find(t => t===champion);
+
     document.getElementById('squad-page-title').textContent = isMySquad ? 'MY SQUAD' : `${player.name.toUpperCase()}'S SQUAD`;
     document.getElementById('squad-player-name').textContent=player.name;
     document.getElementById('squad-initial').textContent=player.avatar_initial;
+
+    // Finalist/champion banner on squad page
+    const fb = document.getElementById('squad-finalist-banner');
+    if (myChampion) {
+      fb.classList.remove('hidden');
+      fb.style.background='#1a3010';fb.style.borderColor='var(--gold)';fb.style.color='var(--gold)';
+      fb.innerHTML=`🏆 ${FLAGS[myChampion]||''} ${myChampion} ARE WORLD CHAMPIONS — YOU WIN $250!`;
+    } else if (myFinalist) {
+      fb.classList.remove('hidden');
+      fb.style.background='#0d1a0d';fb.style.borderColor='var(--neon)66';fb.style.color='var(--neon)';
+      fb.innerHTML=`🏟️ ${FLAGS[myFinalist]||''} ${myFinalist} ARE IN THE FINAL${isMySquad?' — YOU WIN A PRIZE!':''}`;
+    } else if (finalist_1 && finalist_2) {
+      fb.classList.remove('hidden');
+      fb.style.background='#1a0d0d';fb.style.borderColor='#ff224433';fb.style.color='#5a8aaa';
+      fb.innerHTML=`Eliminated — ${FLAGS[finalist_1]||''} ${finalist_1} vs ${FLAGS[finalist_2]||''} ${finalist_2} in the Final`;
+    } else {
+      fb.classList.add('hidden');
+    }
+
     // Squad score badge
     const score=squadScore(squad);
     const rating=squadRating(score);
@@ -1070,11 +1221,18 @@ const App = {
     document.getElementById('squad-score-label').textContent=`${rating.label} · ${score} / ${MAX_SQUAD_SCORE}`;
     document.getElementById('squad-cards').innerHTML=Object.entries(squad).map(([tier,team],idx)=>{
       const meta=TIER_META[tier];
-      return `<div class="team-card panel p-3 text-center relative reveal-up" style="animation-delay:${idx*.1}s;opacity:0;border-top:3px solid ${meta.color}">
+      const isChamp = team === champion;
+      const isFinal = team === finalist_1 || team === finalist_2;
+      const statusBadge = isChamp
+        ? `<div style="display:inline-block;background:var(--gold);color:#000;font-family:'Bebas Neue',Impact,sans-serif;font-size:.65rem;letter-spacing:.1em;padding:2px 8px;border-radius:2px;margin-top:6px;box-shadow:0 0 10px var(--gold)">🏆 CHAMPIONS</div>`
+        : isFinal
+        ? `<div style="display:inline-block;background:var(--neon);color:#000;font-family:'Bebas Neue',Impact,sans-serif;font-size:.65rem;letter-spacing:.1em;padding:2px 8px;border-radius:2px;margin-top:6px;box-shadow:0 0 8px var(--neon)">🏟️ FINALIST</div>`
+        : `<div style="display:inline-block;background:var(--neon);color:#000;font-family:'Bebas Neue',Impact,sans-serif;font-size:.65rem;letter-spacing:.1em;padding:2px 6px;border-radius:2px;margin-top:6px;box-shadow:0 0 8px var(--neon)">LOCKED IN</div>`;
+      return `<div class="team-card panel p-3 text-center relative reveal-up" style="animation-delay:${idx*.1}s;opacity:0;border-top:3px solid ${isChamp?'var(--gold)':isFinal?'var(--neon)':meta.color}${isChamp?';box-shadow:0 0 16px var(--gold)44':''}">
         <div class="tier-badge ${meta.cls} mb-2">${meta.short} · ${meta.label}</div>
         <div class="text-4xl mb-2">${FLAGS[team]||'🏳️'}</div>
-        <div class="text-base font-bold" style="color:#e2e8f0">${team}</div>
-        <div style="display:inline-block;background:var(--neon);color:#000;font-family:'Bebas Neue',Impact,sans-serif;font-size:.65rem;letter-spacing:.1em;padding:2px 6px;border-radius:2px;margin-top:6px;box-shadow:0 0 8px var(--neon)">LOCKED IN</div>
+        <div class="text-base font-bold" style="color:${isChamp?'var(--gold)':isFinal?'var(--neon)':'#e2e8f0'}">${team}</div>
+        ${statusBadge}
       </div>`;
     }).join('');
 

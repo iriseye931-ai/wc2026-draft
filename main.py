@@ -74,8 +74,10 @@ def init_db():
                 value TEXT
             );
         """)
-        # Ensure draw_done key exists
         conn.execute("INSERT OR IGNORE INTO tournament VALUES ('draw_done', '0')")
+        conn.execute("INSERT OR IGNORE INTO tournament VALUES ('finalist_1', '')")
+        conn.execute("INSERT OR IGNORE INTO tournament VALUES ('finalist_2', '')")
+        conn.execute("INSERT OR IGNORE INTO tournament VALUES ('champion', '')")
         conn.commit()
 
 def db_get_players():
@@ -116,11 +118,34 @@ def db_set_draw_done():
         conn.execute("UPDATE tournament SET value='1' WHERE key='draw_done'")
         conn.commit()
 
+def db_get_finals():
+    with get_db() as conn:
+        rows = conn.execute("SELECT key, value FROM tournament WHERE key IN ('finalist_1','finalist_2','champion')").fetchall()
+        data = {r["key"]: r["value"] for r in rows}
+        return {
+            "finalist_1": data.get("finalist_1", ""),
+            "finalist_2": data.get("finalist_2", ""),
+            "champion":   data.get("champion", ""),
+        }
+
+def db_set_finals(f1: str, f2: str):
+    with get_db() as conn:
+        conn.execute("INSERT OR REPLACE INTO tournament VALUES ('finalist_1', ?)", (f1,))
+        conn.execute("INSERT OR REPLACE INTO tournament VALUES ('finalist_2', ?)", (f2,))
+        conn.execute("INSERT OR REPLACE INTO tournament VALUES ('champion', '')")
+        conn.commit()
+
+def db_set_champion(team: str):
+    with get_db() as conn:
+        conn.execute("INSERT OR REPLACE INTO tournament VALUES ('champion', ?)", (team,))
+        conn.commit()
+
 def db_reset():
     with get_db() as conn:
         conn.execute("DELETE FROM players")
         conn.execute("DELETE FROM squads")
         conn.execute("UPDATE tournament SET value='0' WHERE key='draw_done'")
+        conn.execute("UPDATE tournament SET value='' WHERE key IN ('finalist_1','finalist_2','champion')")
         conn.commit()
 
 # ---------------------------------------------------------------------------
@@ -195,18 +220,32 @@ class LoginRequest(BaseModel):
 class HostRequest(BaseModel):
     password: str
 
+class FinalistsRequest(BaseModel):
+    password: str
+    finalist_1: str
+    finalist_2: str
+
+class ChampionRequest(BaseModel):
+    password: str
+    champion: str
+
 # ---------------------------------------------------------------------------
 # Helper — build full state snapshot
 # ---------------------------------------------------------------------------
 
 def full_state():
     players = db_get_players()
-    squads = db_get_squads() if db_is_draw_done() else {}
+    draw_done = db_is_draw_done()
+    squads = db_get_squads() if draw_done else {}
+    finals = db_get_finals() if draw_done else {"finalist_1": "", "finalist_2": "", "champion": ""}
     return {
         "players": players,
         "squads": squads,
-        "draw_done": db_is_draw_done(),
+        "draw_done": draw_done,
         "count": len(players),
+        "finalist_1": finals["finalist_1"],
+        "finalist_2": finals["finalist_2"],
+        "champion":   finals["champion"],
     }
 
 # ---------------------------------------------------------------------------
@@ -284,6 +323,36 @@ async def api_reset(req: HostRequest):
     state = full_state()
     await ws_manager.broadcast({"type": "state_update", **state})
     return {"ok": True}
+
+
+@app.post("/api/set-finalists")
+async def api_set_finalists(req: FinalistsRequest):
+    if req.password != HOST_PASSWORD:
+        raise HTTPException(403, "Wrong password")
+    if not db_is_draw_done():
+        raise HTTPException(400, "Draw not done yet")
+    f1, f2 = req.finalist_1.strip(), req.finalist_2.strip()
+    if not f1 or not f2:
+        raise HTTPException(400, "Both finalists required")
+    if f1 == f2:
+        raise HTTPException(400, "Finalists must be different teams")
+    db_set_finals(f1, f2)
+    state = full_state()
+    await ws_manager.broadcast({"type": "finals_set", **state})
+    return state
+
+
+@app.post("/api/set-champion")
+async def api_set_champion(req: ChampionRequest):
+    if req.password != HOST_PASSWORD:
+        raise HTTPException(403, "Wrong password")
+    finals = db_get_finals()
+    if req.champion not in (finals["finalist_1"], finals["finalist_2"]):
+        raise HTTPException(400, "Champion must be one of the two finalists")
+    db_set_champion(req.champion)
+    state = full_state()
+    await ws_manager.broadcast({"type": "champion_set", **state})
+    return state
 
 
 @app.post("/api/verify-host")
