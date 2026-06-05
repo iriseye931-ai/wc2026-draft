@@ -364,39 +364,69 @@ body,h1,h2,h3,p{margin:0;padding:0}
 <section id="page-landing" class="page">
   <div class="flex flex-col items-center justify-center text-center px-4" style="height:100vh;overflow:hidden;gap:0;padding-top:8px;padding-bottom:8px;justify-content:space-evenly">
     <div class="trophy-glow-pulse" style="flex-shrink:0">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 215" style="width:auto;height:min(160px,18vh);filter:drop-shadow(0 0 22px #ffd70066)">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 350" style="width:auto;height:min(220px,24vh)">
         <defs>
-          <linearGradient id="h26a" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="#6b4400"/><stop offset="28%" stop-color="#d49010"/>
-            <stop offset="50%" stop-color="#fff5a0"/><stop offset="72%" stop-color="#d49010"/>
-            <stop offset="100%" stop-color="#6b4400"/>
+          <linearGradient id="g1" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%"  stop-color="#fff8c0"/>
+            <stop offset="18%" stop-color="#ffd700"/>
+            <stop offset="62%" stop-color="#c08010"/>
+            <stop offset="100%" stop-color="#7a5200"/>
           </linearGradient>
-          <linearGradient id="h26b" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#ffe570"/><stop offset="50%" stop-color="#c89010"/>
-            <stop offset="100%" stop-color="#6b4400"/>
+          <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%"   stop-color="#9a6400"/>
+            <stop offset="25%"  stop-color="#f0c030"/>
+            <stop offset="50%"  stop-color="#fffae8"/>
+            <stop offset="75%"  stop-color="#f0c030"/>
+            <stop offset="100%" stop-color="#9a6400"/>
           </linearGradient>
-          <radialGradient id="h26c" cx="36%" cy="32%" r="68%">
-            <stop offset="0%" stop-color="#fffbe0"/><stop offset="55%" stop-color="#ffd700"/>
-            <stop offset="100%" stop-color="#7a5500"/>
+          <radialGradient id="g3" cx="38%" cy="30%" r="66%">
+            <stop offset="0%"   stop-color="#f8f8f8"/>
+            <stop offset="55%"  stop-color="#c8c8c8"/>
+            <stop offset="100%" stop-color="#707070"/>
           </radialGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
         </defs>
-        <rect width="200" height="215" rx="16" fill="#090909"/>
-        <text x="5" y="160" font-size="132" font-weight="900" font-family="Impact,'Arial Black',sans-serif" fill="white">2</text>
-        <text x="105" y="160" font-size="132" font-weight="900" font-family="Impact,'Arial Black',sans-serif" fill="white">6</text>
-        <path d="M 90,26 C 82,32 68,48 68,65 C 68,75 74,84 82,91 C 86,95 87,100 88,106 L 88,122 L 112,122 L 112,106 C 113,100 114,95 118,91 C 126,84 132,75 132,65 C 132,48 118,32 110,26 Z" fill="url(#h26a)"/>
-        <rect x="97" y="28" width="6" height="80" fill="#2a1800" opacity="0.6"/>
-        <rect x="87" y="122" width="26" height="10" rx="2" fill="url(#h26a)"/>
-        <rect x="79" y="132" width="42" height="10" rx="2" fill="#1e6845"/>
-        <line x1="79" y1="134.5" x2="121" y2="134.5" stroke="#ffd700" stroke-width="1" opacity="0.4"/>
-        <line x1="79" y1="140.5" x2="121" y2="140.5" stroke="#ffd700" stroke-width="1" opacity="0.4"/>
-        <rect x="75" y="142" width="50" height="8" rx="3" fill="url(#h26a)"/>
-        <rect x="69" y="150" width="62" height="8" rx="4" fill="url(#h26b)"/>
-        <circle cx="100" cy="36" r="20" fill="url(#h26c)" stroke="#9a7200" stroke-width="0.8"/>
-        <ellipse cx="100" cy="36" rx="20" ry="6" fill="none" stroke="#9a7200" stroke-width="0.7" opacity="0.55"/>
-        <ellipse cx="100" cy="36" rx="7" ry="20" fill="none" stroke="#9a7200" stroke-width="0.7" opacity="0.55"/>
-        <ellipse cx="91" cy="28" rx="5" ry="4" fill="white" opacity="0.25"/>
-        <text x="100" y="196" text-anchor="middle" font-size="20" font-weight="700" font-family="'Arial Black',Arial,sans-serif" fill="white" letter-spacing="3">FIFA</text>
-        <text x="179" y="200" font-size="7" fill="white" opacity="0.75">™</text>
+
+        <!-- Host nation rainbow arches — USA red · Mexico green · Canada red -->
+        <path d="M52,118 Q150,12 248,118" fill="none" stroke="#BF0A30" stroke-width="14" stroke-linecap="round" opacity="0.88"/>
+        <path d="M65,118 Q150,28 235,118" fill="none" stroke="#006847" stroke-width="10" stroke-linecap="round" opacity="0.88"/>
+        <path d="M76,118 Q150,42 224,118" fill="none" stroke="#FF0000" stroke-width="7"  stroke-linecap="round" opacity="0.72"/>
+
+        <!-- Trophy cup -->
+        <path d="M106,118 Q93,118 91,133 Q88,155 103,170 Q117,184 127,193 L127,212 L173,212 L173,193 Q183,184 197,170 Q212,155 209,133 Q207,118 194,118 Z" fill="url(#g2)" stroke="#c09000" stroke-width="0.5"/>
+        <!-- Cup inner shadow -->
+        <path d="M110,122 Q100,126 98,140 Q96,158 108,170 Q118,181 127,193 L137,193 Q129,181 119,170 Q107,158 109,140 Q110,126 110,122" fill="rgba(0,0,0,.18)"/>
+        <!-- Handles -->
+        <path d="M91,133 Q70,131 68,147 Q66,163 83,170 Q87,157 91,133 Z" fill="url(#g2)" stroke="#c09000" stroke-width="0.5"/>
+        <path d="M209,133 Q230,131 232,147 Q234,163 217,170 Q213,157 209,133 Z" fill="url(#g2)" stroke="#c09000" stroke-width="0.5"/>
+        <!-- Stem -->
+        <rect x="141" y="212" width="18" height="22" fill="url(#g1)"/>
+        <!-- Base tiers -->
+        <rect x="125" y="234" width="50" height="9"  rx="2" fill="url(#g1)"/>
+        <rect x="113" y="243" width="74" height="11" rx="4" fill="url(#g1)"/>
+        <rect x="113" y="246" width="74" height="1.5" fill="rgba(255,255,255,.3)"/>
+        <rect x="113" y="251" width="74" height="1"   fill="rgba(255,255,255,.15)"/>
+
+        <!-- Ball on top -->
+        <circle cx="150" cy="96" r="25" fill="url(#g3)" stroke="url(#g1)" stroke-width="1.5" filter="url(#glow)"/>
+        <path d="M150,71 C157,78 160,87 158,96 C160,105 157,114 150,121" fill="none" stroke="rgba(0,0,0,.14)" stroke-width="1.2"/>
+        <path d="M150,71 C143,78 140,87 142,96 C140,105 143,114 150,121" fill="none" stroke="rgba(0,0,0,.14)" stroke-width="1.2"/>
+        <ellipse cx="150" cy="96" rx="25" ry="8.5" fill="none" stroke="rgba(0,0,0,.1)" stroke-width="1"/>
+        <circle cx="143" cy="87" r="7.5" fill="rgba(255,255,255,.32)"/>
+
+        <!-- 2026 -->
+        <text x="150" y="302" text-anchor="middle" font-size="74" font-weight="900" font-family="Impact,'Arial Black',sans-serif" fill="white" letter-spacing="2">2026</text>
+
+        <!-- Divider line -->
+        <rect x="62" y="312" width="176" height="1" rx="0.5" fill="url(#g1)" opacity="0.45"/>
+
+        <!-- FIFA WORLD CUP wordmark -->
+        <text x="150" y="332" text-anchor="middle" font-size="15" font-weight="700" font-family="Impact,'Arial Black',sans-serif" fill="url(#g1)" letter-spacing="5.5">FIFA WORLD CUP</text>
+        <text x="56"  y="334" font-size="9" fill="#ffd700" opacity="0.65">★</text>
+        <text x="238" y="334" font-size="9" fill="#ffd700" opacity="0.65">★</text>
       </svg>
     </div>
     <div style="flex-shrink:0">
@@ -1189,62 +1219,6 @@ document.body.appendChild(sb);
       <div class="cd-unit"><span class="cd-num">${pad(s)}</span><span class="cd-label">Sec</span></div>`;
   }
   tick(); setInterval(tick,1000);
-})();
-
-/* ── Theme Switcher ── */
-const THEMES = [
-  {
-    name:'Cyber Draft',
-    neon:'#00ff41',gold:'#ffd700',blue:'#00d4ff',red:'#E61D25',
-    bg:'#04080a',panel:'#0b1418',panel2:'#111e24',
-    font:"'Rajdhani','Trebuchet MS',sans-serif",
-  },
-  {
-    name:'UCL Dark',
-    neon:'#3b82f6',gold:'#ffd700',blue:'#93c5fd',red:'#E61D25',
-    bg:'#020818',panel:'#060f2e',panel2:'#0d1a3f',
-    font:"'Inter','Rajdhani',sans-serif",
-  },
-  {
-    name:'Golden Hour',
-    neon:'#f59e0b',gold:'#ffd700',blue:'#fbbf24',red:'#ef4444',
-    bg:'#0a0600',panel:'#150c00',panel2:'#1f1200',
-    font:"'Rajdhani','Trebuchet MS',sans-serif",
-  },
-  {
-    name:'FIFA Official',
-    neon:'#E61D25',gold:'#ffd700',blue:'#ff6666',red:'#ff2244',
-    bg:'#0d0d0d',panel:'#1a1a1a',panel2:'#242424',
-    font:"'Rajdhani','Trebuchet MS',sans-serif",
-  },
-];
-let _themeIdx = parseInt(localStorage.getItem('wc_theme')||'0');
-function applyTheme(idx) {
-  _themeIdx = ((idx%THEMES.length)+THEMES.length)%THEMES.length;
-  localStorage.setItem('wc_theme',_themeIdx);
-  const t=THEMES[_themeIdx],r=document.documentElement.style;
-  r.setProperty('--neon',t.neon);r.setProperty('--gold',t.gold);
-  r.setProperty('--blue',t.blue);r.setProperty('--red',t.red);
-  r.setProperty('--bg',t.bg);r.setProperty('--panel',t.panel);
-  r.setProperty('--panel2',t.panel2);r.setProperty('--body-font',t.font);
-  document.body.style.background=t.bg;
-  if(_themLabel)_themLabel.textContent=t.name;
-}
-let _themLabel;
-(function(){
-  const wrap=document.createElement('div');
-  wrap.style.cssText='position:fixed;bottom:60px;left:16px;z-index:50;display:flex;flex-direction:column;align-items:center;gap:3px';
-  const btn=document.createElement('button');
-  btn.textContent='🎨';btn.title='Switch theme';
-  btn.style.cssText='background:#0a1a22;border:1px solid #1e3040;border-radius:50%;width:36px;height:36px;font-size:14px;cursor:pointer;color:#3a5a70;transition:color .2s,border-color .2s';
-  btn.onmouseenter=()=>{btn.style.color='var(--neon)';btn.style.borderColor='var(--neon)';};
-  btn.onmouseleave=()=>{btn.style.color='#3a5a70';btn.style.borderColor='#1e3040';};
-  btn.onclick=()=>applyTheme(_themeIdx+1);
-  _themLabel=document.createElement('div');
-  _themLabel.style.cssText='font-family:"Bebas Neue",Impact,sans-serif;font-size:.55rem;letter-spacing:.1em;color:#3a5a70;white-space:nowrap';
-  wrap.appendChild(btn);wrap.appendChild(_themLabel);
-  document.body.appendChild(wrap);
-  applyTheme(_themeIdx);
 })();
 
 /* ── Service Worker registration ── */
