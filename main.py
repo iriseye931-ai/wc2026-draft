@@ -43,10 +43,10 @@ POLL_INTERVAL = int(os.getenv("BRACKET_POLL_SECONDS", "180"))  # 3 min default
 # ---------------------------------------------------------------------------
 
 TIERS = {
-    "tier1": ["Brazil","France","England","Argentina","Spain","Germany","Portugal","Belgium","Netherlands","Italy","Croatia","Uruguay"],
-    "tier2": ["Denmark","Mexico","USA","Japan","Colombia","Morocco","Senegal","Switzerland","Poland","Sweden","Serbia","Iran"],
-    "tier3": ["South Korea","Australia","Egypt","Nigeria","Cameroon","Ghana","Tunisia","Algeria","Peru","Chile","Ecuador","Paraguay"],
-    "tier4": ["Venezuela","Bolivia","Costa Rica","Panama","Canada","Jamaica","Honduras","Saudi Arabia","Uzbekistan","Iraq","Qatar","New Zealand"],
+    "tier1": ["France","Spain","Argentina","England","Portugal","Brazil","Germany","Netherlands","Belgium","Morocco","Uruguay","Colombia"],
+    "tier2": ["Croatia","Japan","Senegal","Switzerland","USA","Mexico","Norway","Sweden","Austria","Turkey","Ecuador","South Korea"],
+    "tier3": ["Iran","Australia","Egypt","Ivory Coast","Scotland","Bosnia and Herzegovina","Czechia","Algeria","Tunisia","Ghana","South Africa","DR Congo"],
+    "tier4": ["Paraguay","Canada","Panama","Uzbekistan","Qatar","Iraq","Saudi Arabia","Jordan","Cape Verde","New Zealand","Curaçao","Haiti"],
 }
 
 AVATAR_COLORS = ["#00ff41","#00d4ff","#ffd700","#cc44ff","#ff8800","#ff2244","#00ff88","#ff44cc",
@@ -230,13 +230,17 @@ ws_manager = WSManager()
 
 # football-data.org team name → our internal name
 _FD_TEAM = {
-    "Korea Republic":       "South Korea",
-    "United States":        "USA",
-    "IR Iran":              "Iran",
-    "Côte d'Ivoire":        "Ivory Coast",
-    "Bosnia and Herzegovina": "Bosnia",
-    "China PR":             "China",
-    "Trinidad and Tobago":  "Trinidad & Tobago",
+    "Korea Republic":           "South Korea",
+    "United States":            "USA",
+    "IR Iran":                  "Iran",
+    "Côte d'Ivoire":            "Ivory Coast",
+    "Congo DR":                 "DR Congo",
+    "Democratic Republic of Congo": "DR Congo",
+    "Czech Republic":           "Czechia",
+    "Cabo Verde":               "Cape Verde",
+    "Türkiye":                  "Turkey",
+    "China PR":                 "China",
+    "Trinidad and Tobago":      "Trinidad & Tobago",
 }
 
 # football-data.org stage → our bracket round key
@@ -247,6 +251,10 @@ _FD_STAGE = {
     "SEMI_FINALS":   "sf",
     "FINAL":         "final",
 }
+
+# Cache for all WC matches — refreshed each poll cycle
+_match_cache: list = []
+_match_cache_ts: str = ""
 
 def _fd_name(raw: str) -> str:
     return _FD_TEAM.get(raw, raw)
@@ -335,11 +343,14 @@ async def _apply_fd_matches(matches: list) -> bool:
     return changed
 
 async def _poll_loop():
+    global _match_cache, _match_cache_ts
     log.info("Bracket polling started (interval=%ds)", POLL_INTERVAL)
     while True:
         await asyncio.sleep(POLL_INTERVAL)
         try:
             matches  = await _fetch_wc_matches()
+            _match_cache = matches
+            _match_cache_ts = datetime.utcnow().isoformat()
             changed  = await _apply_fd_matches(matches)
             if changed:
                 state = full_state()
@@ -598,6 +609,58 @@ async def api_sync_bracket(req: HostRequest):
         return {"ok": True, "changed": changed, "matches_fetched": len(matches)}
     except httpx.HTTPError as e:
         raise HTTPException(502, f"football-data.org error: {e}")
+
+
+@app.get("/api/matches")
+def api_matches():
+    """Return cached WC matches for the next 7 days / last 48h (group+knockout)."""
+    if not FD_API_KEY or not _match_cache:
+        return {"matches": [], "live_sync": bool(FD_API_KEY), "cached_at": _match_cache_ts}
+
+    from datetime import timezone, timedelta
+    now = datetime.now(timezone.utc)
+    cutoff_future = now + timedelta(days=7)
+    cutoff_past   = now - timedelta(hours=48)
+
+    out = []
+    for m in _match_cache:
+        status   = m.get("status", "")
+        utc_date = m.get("utcDate", "")
+        try:
+            match_dt = datetime.fromisoformat(utc_date.replace("Z", "+00:00"))
+        except Exception:
+            continue
+
+        if status in ("IN_PLAY", "PAUSED"):
+            pass  # always include live
+        elif status == "FINISHED" and match_dt >= cutoff_past:
+            pass
+        elif status in ("SCHEDULED", "TIMED") and match_dt <= cutoff_future:
+            pass
+        else:
+            continue
+
+        home  = _fd_name((m.get("homeTeam") or {}).get("name", ""))
+        away  = _fd_name((m.get("awayTeam") or {}).get("name", ""))
+        score = m.get("score") or {}
+        ft    = score.get("fullTime") or {}
+        ht    = score.get("halfTime") or {}
+        stage = _FD_STAGE.get(m.get("stage", ""), "group")
+
+        out.append({
+            "home":       home,
+            "away":       away,
+            "status":     status,
+            "utcDate":    utc_date,
+            "stage":      stage,
+            "homeScore":  ft.get("home"),
+            "awayScore":  ft.get("away"),
+            "homeHT":     ht.get("home"),
+            "awayHT":     ht.get("away"),
+        })
+
+    out.sort(key=lambda x: x["utcDate"])
+    return {"matches": out, "live_sync": True, "cached_at": _match_cache_ts}
 
 
 @app.get("/api/health")

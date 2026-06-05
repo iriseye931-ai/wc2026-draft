@@ -83,7 +83,7 @@ body,h1,h2,h3,p{margin:0;padding:0}
       --body-font: 'Rajdhani', 'Trebuchet MS', sans-serif;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: var(--body-font); background: var(--bg); color: #e2e8f0; min-height: 100vh; overflow-x: hidden; }
+    body { font-family: var(--body-font); background: var(--bg); color: #e2e8f0; min-height: 100vh; overflow-x: clip; }
     h1, h2, .bebas { font-family: 'Bebas Neue', Impact, 'Arial Narrow', sans-serif; letter-spacing: .05em; }
     #bgCanvas { position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: .35; }
     #confettiCanvas { position: fixed; inset: 0; pointer-events: none; z-index: 999; }
@@ -172,7 +172,7 @@ body,h1,h2,h3,p{margin:0;padding:0}
     .conn-off    { background:#ff224422;color:var(--red);border:1px solid var(--red)44; }
 
     /* Scanning overlay */
-    .scanline-wrap { position:relative;overflow:hidden; }
+    .scanline-wrap { position:relative; }
     .scanline-wrap::after { content:'';position:absolute;left:0;right:0;height:80px;background:linear-gradient(transparent,rgba(0,255,65,.04),transparent);animation:scanline 4s linear infinite;pointer-events:none;z-index:2; }
 
     /* ── ATMOSPHERE: Stadium floodlight beams (panning) ── */
@@ -345,14 +345,15 @@ body,h1,h2,h3,p{margin:0;padding:0}
     .bracket-match { position:absolute; left:4px; right:4px; background:#0a1520; border:1px solid #1e3040; border-radius:4px; overflow:hidden; cursor:pointer; transition:border-color .2s; }
     .bracket-match:hover { border-color:#2a5070; }
     .bracket-match.has-winner { border-color:#2a4060; }
+    .bracket-match-empty { opacity:.3; border-style:dashed; cursor:pointer; }
     .bracket-match-inner { display:flex; flex-direction:column; }
     .bm-team { display:flex; align-items:center; gap:5px; padding:5px 8px; font-size:10px; font-family:monospace; color:#5a8aaa; min-height:26px; position:relative; transition:background .15s; }
-    .bm-team.winner { background:#0d2818; color:#e2e8f0; }
-    .bm-team.winner .bm-name { color:var(--neon); font-weight:bold; }
-    .bm-team.champion-team { background:#1a2808 !important; }
-    .bm-team.champion-team .bm-name { color:var(--gold) !important; }
-    .bm-team.my-team { background:#0a1e28; }
-    .bm-team.my-team .bm-name { color:var(--blue); }
+    .bm-team.winner { background:#0a1a14; color:#c0d0c8; }
+    .bm-team.winner .bm-name { color:#c0d0c8; font-weight:400; }
+    .bm-team.champion-team { background:#1a2000 !important; }
+    .bm-team.champion-team .bm-name { color:var(--gold) !important; font-weight:700; }
+    .bm-team.mine { background:linear-gradient(90deg,#00ff4122,#00ff4108); border-left:3px solid var(--neon); box-shadow:inset 0 0 12px #00ff4110; }
+    .bm-team.mine .bm-name { color:var(--neon); font-weight:700; text-shadow:0 0 6px var(--neon)88; }
     .bm-sep { height:1px; background:#0f1f2a; }
     .bm-owner { display:inline-block; width:6px; height:6px; border-radius:50%; flex-shrink:0; }
     .bm-flag { font-size:12px; line-height:1; flex-shrink:0; }
@@ -446,6 +447,7 @@ body,h1,h2,h3,p{margin:0;padding:0}
       <button id="btn-join" class="btn-battle pulse-neon" onclick="App.openRegisterModal()" onmouseenter="spawnParticles(this)">
         <span class="btn-inner"><span>⚡</span><span class="ball-roll">⚽</span> JOIN THE BATTLE</span>
       </button>
+      <button id="btn-login-existing" class="btn-neon" onclick="App.openLoginModal()" style="display:none">👤 LOGIN</button>
       <button class="btn-host" onclick="App.openHostModal()"><span class="lock-icon">🔐</span> HOST LOGIN</button>
     </div>
     <div class="scoreboard mx-auto" style="max-width:260px;flex-shrink:0">
@@ -501,7 +503,7 @@ body,h1,h2,h3,p{margin:0;padding:0}
     </div>
   </div>
 
-  <div class="max-w-5xl mx-auto px-4 py-6">
+  <div class="max-w-5xl mx-auto px-4 py-6" style="padding-bottom:3rem">
     <div class="panel p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
       <div>
         <div class="text-xs uppercase tracking-widest mb-1" style="color:#3a5a70">Tournament Status</div>
@@ -537,7 +539,12 @@ body,h1,h2,h3,p{margin:0;padding:0}
       </div>
     </div>
 
-    <div class="mb-4 text-xs uppercase tracking-widest" style="color:#3a5a70">Registered Players</div>
+    <!-- My Squad Hero — shown post-draw when logged in -->
+    <div id="my-squad-hero" class="hidden mb-6"></div>
+
+    <!-- Other players -->
+    <div id="others-label" class="hidden mb-4 text-xs uppercase tracking-widest" style="color:#3a5a70">The Field</div>
+    <div class="mb-4 text-xs uppercase tracking-widest" id="reg-players-label" style="color:#3a5a70">Registered Players</div>
     <div id="players-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
     <div id="empty-slots" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
 
@@ -592,9 +599,19 @@ body,h1,h2,h3,p{margin:0;padding:0}
       <div class="text-center text-xs uppercase tracking-widest mb-6 flicker" style="color:var(--neon)44">⚽ YOUR NATIONS ⚽</div>
       <div id="squad-cards" class="grid grid-cols-2 sm:grid-cols-3 gap-4"></div>
     </div>
+    <div id="matches-panel" class="panel p-4 mt-6 hidden">
+      <div class="flex items-center justify-between mb-3">
+        <div class="text-xs uppercase tracking-widest" style="color:#3a5a70">⚽ Your Teams Today</div>
+        <div id="matches-live-dot" class="hidden" style="display:inline-flex;align-items:center;gap:5px">
+          <span style="width:6px;height:6px;border-radius:50%;background:var(--neon);box-shadow:0 0 5px var(--neon);display:inline-block"></span>
+          <span style="font-size:.6rem;color:var(--neon);font-family:monospace;letter-spacing:.08em">LIVE</span>
+        </div>
+      </div>
+      <div id="matches-list" class="flex flex-col gap-2"></div>
+    </div>
     <div class="panel p-4 mt-6">
-      <div class="text-xs uppercase tracking-widest mb-3" style="color:#3a5a70">⚔️ Rivalry Meter</div>
-      <div id="rivalry-list" class="flex flex-col gap-2 text-sm"></div>
+      <div class="text-xs uppercase tracking-widest mb-3" style="color:#3a5a70">📰 Squad News</div>
+      <div id="squad-news-list" class="flex flex-col gap-3"></div>
     </div>
   </div>
 </section>
@@ -649,16 +666,15 @@ body,h1,h2,h3,p{margin:0;padding:0}
 <div id="modal-register" class="modal-bg hidden">
   <div class="panel p-6 w-full max-w-md mx-4 relative" style="border:1px solid var(--neon)44">
     <button class="absolute top-3 right-4 text-2xl" style="color:#3a5a70" onclick="App.closeModal('modal-register')">✕</button>
-    <h2 class="text-3xl bebas mb-1" style="color:var(--neon)">JOIN THE DRAFT</h2>
-    <p class="text-sm mb-5" style="color:#5a8aaa">Register to secure your spot in the tournament</p>
+    <h2 id="modal-reg-title" class="text-3xl bebas mb-1" style="color:var(--neon)">JOIN THE DRAFT</h2>
+    <p id="modal-reg-sub" class="text-sm mb-5" style="color:#5a8aaa">Register to secure your spot in the tournament</p>
     <div class="flex flex-col gap-3">
-      <input id="reg-name" type="text" placeholder="Full Name" maxlength="30" />
+      <div id="reg-name-row"><input id="reg-name" type="text" placeholder="Full Name" maxlength="30" /></div>
       <input id="reg-email" type="email" placeholder="Email Address" />
     </div>
     <div id="reg-error" class="text-sm mt-3 hidden" style="color:var(--red)"></div>
     <button id="btn-register" class="btn-neon w-full mt-5" onclick="App.register()">⚡ JOIN THE DRAFT</button>
-    <p class="text-xs mt-4 text-center" style="color:#3a5a70">Already registered? Enter your email and click login.</p>
-    <button id="btn-login" class="btn-red w-full mt-2" onclick="App.loginExisting()">🔑 ALREADY REGISTERED</button>
+    <button id="btn-login" class="btn-neon w-full mt-5 hidden" onclick="App.loginExisting()">🔑 LOGIN</button>
   </div>
 </div>
 
@@ -689,29 +705,35 @@ const TIER_META = {
   tier3:{label:"DARK HORSES", short:"T3",color:"var(--neon)",cls:"t3"},
   tier4:{label:"WILDCARDS",   short:"T4",color:"#cc44ff",    cls:"t4"},
 };
-const TIERS_FLAT = ["Brazil","France","England","Argentina","Spain","Germany","Portugal","Belgium","Netherlands","Italy","Croatia","Uruguay","Denmark","Mexico","USA","Japan","Colombia","Morocco","Senegal","Switzerland","Poland","Sweden","Serbia","Iran","South Korea","Australia","Egypt","Nigeria","Cameroon","Ghana","Tunisia","Algeria","Peru","Chile","Ecuador","Paraguay","Venezuela","Bolivia","Costa Rica","Panama","Canada","Jamaica","Honduras","Saudi Arabia","Uzbekistan","Iraq","Qatar","New Zealand"];
+const TIERS_FLAT = ["France","Spain","Argentina","England","Portugal","Brazil","Germany","Netherlands","Belgium","Morocco","Uruguay","Colombia","Croatia","Japan","Senegal","Switzerland","USA","Mexico","Norway","Sweden","Austria","Turkey","Ecuador","South Korea","Iran","Australia","Egypt","Ivory Coast","Scotland","Bosnia and Herzegovina","Czechia","Algeria","Tunisia","Ghana","South Africa","DR Congo","Paraguay","Canada","Panama","Uzbekistan","Qatar","Iraq","Saudi Arabia","Jordan","Cape Verde","New Zealand","Curaçao","Haiti"];
 
 const FLAGS = {
-  "Brazil":"🇧🇷","France":"🇫🇷","England":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","Argentina":"🇦🇷","Spain":"🇪🇸","Germany":"🇩🇪",
-  "Portugal":"🇵🇹","Belgium":"🇧🇪","Netherlands":"🇳🇱","Italy":"🇮🇹","Croatia":"🇭🇷","Uruguay":"🇺🇾",
-  "Denmark":"🇩🇰","Mexico":"🇲🇽","USA":"🇺🇸","Japan":"🇯🇵","Colombia":"🇨🇴","Morocco":"🇲🇦",
-  "Senegal":"🇸🇳","Switzerland":"🇨🇭","Poland":"🇵🇱","Sweden":"🇸🇪","Serbia":"🇷🇸","Iran":"🇮🇷",
-  "South Korea":"🇰🇷","Australia":"🇦🇺","Egypt":"🇪🇬","Nigeria":"🇳🇬","Cameroon":"🇨🇲","Ghana":"🇬🇭",
-  "Tunisia":"🇹🇳","Algeria":"🇩🇿","Peru":"🇵🇪","Chile":"🇨🇱","Ecuador":"🇪🇨","Paraguay":"🇵🇾",
-  "Venezuela":"🇻🇪","Bolivia":"🇧🇴","Costa Rica":"🇨🇷","Panama":"🇵🇦","Canada":"🇨🇦","Jamaica":"🇯🇲",
-  "Honduras":"🇭🇳","Saudi Arabia":"🇸🇦","Uzbekistan":"🇺🇿","Iraq":"🇮🇶","Qatar":"🇶🇦","New Zealand":"🇳🇿"
+  "France":"🇫🇷","Spain":"🇪🇸","Argentina":"🇦🇷","England":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","Portugal":"🇵🇹","Brazil":"🇧🇷",
+  "Germany":"🇩🇪","Netherlands":"🇳🇱","Belgium":"🇧🇪","Morocco":"🇲🇦","Uruguay":"🇺🇾","Colombia":"🇨🇴",
+  "Croatia":"🇭🇷","Japan":"🇯🇵","Senegal":"🇸🇳","Switzerland":"🇨🇭","USA":"🇺🇸","Mexico":"🇲🇽",
+  "Norway":"🇳🇴","Sweden":"🇸🇪","Austria":"🇦🇹","Turkey":"🇹🇷","Ecuador":"🇪🇨","South Korea":"🇰🇷",
+  "Iran":"🇮🇷","Australia":"🇦🇺","Egypt":"🇪🇬","Ivory Coast":"🇨🇮","Scotland":"🏴󠁧󠁢󠁳󠁣󠁴󠁿","Bosnia and Herzegovina":"🇧🇦",
+  "Czechia":"🇨🇿","Algeria":"🇩🇿","Tunisia":"🇹🇳","Ghana":"🇬🇭","South Africa":"🇿🇦","DR Congo":"🇨🇩",
+  "Paraguay":"🇵🇾","Canada":"🇨🇦","Panama":"🇵🇦","Uzbekistan":"🇺🇿","Qatar":"🇶🇦","Iraq":"🇮🇶",
+  "Saudi Arabia":"🇸🇦","Jordan":"🇯🇴","Cape Verde":"🇨🇻","New Zealand":"🇳🇿","Curaçao":"🇨🇼","Haiti":"🇭🇹"
 };
 
 const TEAM_STRENGTH = {
-  "Brazil":100,"France":98,"England":96,"Argentina":95,"Spain":93,"Germany":91,"Portugal":89,"Belgium":86,
-  "Netherlands":84,"Italy":82,"Croatia":80,"Uruguay":78,"Denmark":76,"Mexico":74,"USA":72,"Japan":71,
-  "Colombia":70,"Morocco":68,"Senegal":66,"Switzerland":64,"Poland":62,"Sweden":60,"Serbia":58,"Iran":56,
-  "South Korea":55,"Australia":53,"Egypt":51,"Nigeria":49,"Cameroon":47,"Ghana":45,"Tunisia":43,"Algeria":41,
-  "Peru":40,"Chile":38,"Ecuador":36,"Paraguay":34,"Venezuela":32,"Bolivia":30,"Costa Rica":28,"Panama":26,
-  "Canada":25,"Jamaica":22,"Honduras":19,"Saudi Arabia":16,"Uzbekistan":13,"Iraq":12,"Qatar":11,"New Zealand":10,
+  // Tier 1 — God Tier
+  "France":98,"Spain":93,"Argentina":95,"England":96,"Portugal":89,"Brazil":100,
+  "Germany":91,"Netherlands":84,"Belgium":83,"Morocco":72,"Uruguay":78,"Colombia":74,
+  // Tier 2 — Contenders
+  "Croatia":80,"Japan":71,"Senegal":68,"Switzerland":65,"USA":73,"Mexico":75,
+  "Norway":63,"Sweden":64,"Austria":62,"Turkey":61,"Ecuador":59,"South Korea":56,
+  // Tier 3 — Dark Horses
+  "Iran":48,"Australia":47,"Egypt":46,"Ivory Coast":45,"Scotland":50,"Bosnia and Herzegovina":54,
+  "Czechia":52,"Algeria":42,"Tunisia":43,"Ghana":40,"South Africa":38,"DR Congo":36,
+  // Tier 4 — Wildcards
+  "Paraguay":33,"Canada":25,"Panama":26,"Uzbekistan":14,"Qatar":17,"Iraq":13,
+  "Saudi Arabia":18,"Jordan":11,"Cape Verde":28,"New Zealand":9,"Curaçao":10,"Haiti":20,
 };
-const MAX_SQUAD_SCORE = 263; // 100+76+55+32 — top team in each of 4 tiers
-const MIN_SQUAD_SCORE = 178; // 78+56+34+10 — worst team in each of 4 tiers
+const MAX_SQUAD_SCORE = 267; // 100+80+54+33 — top team in each tier
+const MIN_SQUAD_SCORE = 173; // 72+56+36+9 — worst team in each tier
 
 function squadScore(squad) {
   return Object.values(squad).reduce((s,t)=>s+(TEAM_STRENGTH[t]||0),0);
@@ -723,6 +745,36 @@ function squadRating(score) {
   if(pct>=0.50) return {label:'STRONG DRAW',    color:'var(--neon)'};
   if(pct>=0.30) return {label:'SOLID DRAW',     color:'#ff8800'};
   return             {label:'UNDERDOG BUILD',   color:'#cc44ff'};
+}
+
+function getTeamStatus(team, bracket, champion) {
+  if (!bracket) return {stage:'group', label:'GROUP STAGE', color:'#5a8aaa'};
+  if (champion && team === champion) return {stage:'champion', label:'🏆 CHAMPIONS', color:'var(--gold)'};
+  const RLABELS = {r32:'ROUND OF 32',r16:'ROUND OF 16',qf:'QUARTERFINAL',sf:'SEMIFINAL',final:'🏟️ FINALIST'};
+  const RCOLORS = {r32:'#5a8aaa',r16:'var(--blue)',qf:'var(--neon)',sf:'#cc44ff',final:'var(--neon)'};
+  const rounds = ['r32','r16','qf','sf','final'];
+  let lastSeen = null;
+  for (const rk of rounds) {
+    for (const m of (bracket[rk]||[])) {
+      if (m.home === team || m.away === team) lastSeen = {round:rk, match:m};
+    }
+  }
+  if (!lastSeen) return {stage:'group', label:'GROUP STAGE', color:'#5a8aaa'};
+  const {round, match} = lastSeen;
+  if (match.winner) {
+    if (match.winner === team) {
+      if (round === 'final') return {stage:'champion', label:'🏆 CHAMPIONS', color:'var(--gold)'};
+      const nxt = rounds[rounds.indexOf(round)+1];
+      return {stage:nxt, label:RLABELS[nxt], color:RCOLORS[nxt]};
+    }
+    return {stage:'eliminated', label:'ELIMINATED', color:'#ff2244'};
+  }
+  return {stage:round, label:RLABELS[round], color:RCOLORS[round]};
+}
+
+function countAlive(squad, bracket, champion) {
+  if (!squad) return 0;
+  return Object.values(squad).filter(t => getTeamStatus(t, bracket, champion).stage !== 'eliminated').length;
 }
 
 const RIVALRY_LINES = [
@@ -884,7 +936,10 @@ const App = {
     document.getElementById(id).classList.remove('hidden');
     window.scrollTo(0,0);
   },
-  showDashboard() { this.showPage('page-dashboard'); this.renderDashboard(); },
+  showDashboard() {
+    if (this._matchRefreshTimer) { clearTimeout(this._matchRefreshTimer); this._matchRefreshTimer=null; }
+    this.showPage('page-dashboard'); this.renderDashboard();
+  },
   showBracket() { this.showPage('page-bracket'); this.renderBracket(); },
   showSquad(playerId) {
     const pid = playerId || this.currentPlayer?.id;
@@ -922,11 +977,13 @@ const App = {
     for(let i=0;i<12;i++){const s=document.getElementById('slot-'+i);if(s){const p=this._state.players[i];s.className='player-slot'+(i<n?' filled':'');s.textContent=i<n?(p?.avatar_initial||'✓'):'·';if(p&&i<n)s.style.color=p.avatar_color;else s.style.color='';}}
     document.getElementById('landing-progress').style.width=`${(n/12)*100}%`;
     const joinBtn=document.getElementById('btn-join');
+    const loginBtn=document.getElementById('btn-login-existing');
     if(joinBtn){
       const full=n>=12||this._state.draw_done;
       joinBtn.disabled=full;
       const inner=joinBtn.querySelector('.btn-inner');
       if(inner)inner.innerHTML=full?'<span>🔒</span> SQUAD FULL':'<span>⚡</span><span class="ball-roll">⚽</span> JOIN THE BATTLE';
+      if(loginBtn) loginBtn.style.display = full ? 'inline-flex' : 'none';
     }
     if (!document.getElementById('page-dashboard').classList.contains('hidden')) this.renderDashboard();
     if (!document.getElementById('page-bracket').classList.contains('hidden')) this.renderBracket();
@@ -955,11 +1012,28 @@ const App = {
   },
 
   openRegisterModal() {
-    document.getElementById('modal-register').classList.remove('hidden');
+    document.getElementById('modal-reg-title').textContent = 'JOIN THE DRAFT';
+    document.getElementById('modal-reg-sub').textContent = 'Register to secure your spot in the tournament';
+    document.getElementById('reg-name-row').style.display = '';
+    document.getElementById('btn-register').classList.remove('hidden');
+    document.getElementById('btn-login').classList.add('hidden');
     document.getElementById('reg-name').value='';
     document.getElementById('reg-email').value='';
     document.getElementById('reg-error').classList.add('hidden');
+    document.getElementById('modal-register').classList.remove('hidden');
     setTimeout(()=>document.getElementById('reg-name').focus(),100);
+  },
+  openLoginModal() {
+    document.getElementById('modal-reg-title').textContent = 'WELCOME BACK';
+    document.getElementById('modal-reg-sub').textContent = 'Enter your email to access your squad';
+    document.getElementById('reg-name-row').style.display = 'none';
+    document.getElementById('btn-register').classList.add('hidden');
+    document.getElementById('btn-login').classList.remove('hidden');
+    document.getElementById('reg-name').value='';
+    document.getElementById('reg-email').value='';
+    document.getElementById('reg-error').classList.add('hidden');
+    document.getElementById('modal-register').classList.remove('hidden');
+    setTimeout(()=>document.getElementById('reg-email').focus(),100);
   },
   openHostModal() {
     document.getElementById('modal-host').classList.remove('hidden');
@@ -1115,7 +1189,7 @@ const App = {
 
     const drawZone=document.getElementById('draw-zone');
     const viewZone=document.getElementById('view-squad-zone');
-    if(draw_done && cp && squads[cp.id]){drawZone.classList.add('hidden');viewZone.classList.remove('hidden');}
+    if(draw_done && cp && squads[cp.id]){drawZone.classList.add('hidden');viewZone.classList.add('hidden');}
     else if(this._hostVerified && !draw_done){
       drawZone.classList.remove('hidden');viewZone.classList.add('hidden');
       const btn=document.getElementById('btn-draw');btn.disabled=count<12;
@@ -1184,17 +1258,80 @@ const App = {
       prizeBanner.classList.add('hidden');
     }
 
+    // ── My Squad Hero ────────────────────────────────────────────────
+    const hero = document.getElementById('my-squad-hero');
+    const othersLabel = document.getElementById('others-label');
+    const regLabel = document.getElementById('reg-players-label');
+    const mySquad = cp && squads[cp.id];
+    if (draw_done && mySquad) {
+      hero.classList.remove('hidden');
+      othersLabel.classList.remove('hidden');
+      regLabel.classList.add('hidden');
+      const bracket = this._state.bracket || null;
+      const alive = countAlive(mySquad, bracket, champion);
+      const aliveColor = alive===4?'var(--neon)':alive===3?'var(--blue)':alive===2?'#ff8800':alive===1?'#ff2244':'#5a5a5a';
+      // Finalist/champion banner text
+      const myTeams = Object.values(mySquad);
+      const myChamp = myTeams.find(t=>t===champion);
+      const myFinal = myTeams.find(t=>t===finalist_1||t===finalist_2);
+      let heroBanner = '';
+      if (myChamp) heroBanner = `<div style="margin-top:10px;padding:8px 14px;background:#1a3010;border:1px solid var(--gold)66;border-radius:4px;font-family:'Bebas Neue',Impact,sans-serif;font-size:.85rem;color:var(--gold);letter-spacing:.08em">🏆 ${FLAGS[myChamp]||''} ${myChamp} ARE WORLD CHAMPIONS — YOU WIN $250!</div>`;
+      else if (myFinal) heroBanner = `<div style="margin-top:10px;padding:8px 14px;background:#0d1a0d;border:1px solid var(--neon)44;border-radius:4px;font-family:'Bebas Neue',Impact,sans-serif;font-size:.85rem;color:var(--neon);letter-spacing:.08em">🏟️ ${FLAGS[myFinal]||''} ${myFinal} ARE IN THE FINAL — YOU WIN A PRIZE!</div>`;
+      const teamCards = Object.entries(mySquad).map(([tier,team])=>{
+        const ts = getTeamStatus(team, bracket, champion);
+        const meta = TIER_META[tier];
+        const isChamp = ts.stage==='champion', isFinal = ts.stage==='final', isElim = ts.stage==='eliminated';
+        const isActive = !isChamp && !isFinal && !isElim && ts.stage !== 'group';
+        const cardBg = isChamp ? 'linear-gradient(160deg,#1a2a00,#2a3a00)' : isFinal ? 'linear-gradient(160deg,#001a0d,#002a12)' : isElim ? '#0a0a0a' : '#0c1620';
+        const borderCol = isChamp?'var(--gold)':isFinal?'var(--neon)':isElim?'#3a2020':isActive?meta.color:meta.color+'88';
+        const borderGlow = isChamp?'0 0 24px var(--gold)33':isFinal?'0 0 18px var(--neon)33':isActive?`0 0 12px ${meta.color}22`:'none';
+        const nameCol = isChamp?'var(--gold)':isFinal?'var(--neon)':isElim?'#444':'#fff';
+        const badgeBg = isChamp?'var(--gold)':isElim?'#5a1a1a':isFinal?'var(--neon)':ts.color;
+        const badgeFg = isElim?'#ff4444':'#000';
+        const flagSize = isChamp||isFinal ? '3.6rem' : isElim ? '2.6rem' : '3rem';
+        return `<div style="background:${cardBg};border:1px solid ${borderCol};border-top:3px solid ${borderCol};border-radius:8px;padding:18px 10px 16px;text-align:center;box-shadow:${borderGlow};transition:transform .2s${isElim?';opacity:.45':''}${isChamp?';animation:pulse-gold 2s ease-in-out infinite':''}">
+          <div style="font-size:${flagSize};line-height:1;margin-bottom:8px;filter:${isElim?'grayscale(1)':'none'}">${FLAGS[team]||'🏳️'}</div>
+          <div style="font-family:'Bebas Neue',Impact,sans-serif;font-size:1.05rem;color:${nameCol};letter-spacing:.05em;line-height:1;margin-bottom:6px;text-shadow:${isChamp?'0 0 10px var(--gold)88':isFinal?'0 0 8px var(--neon)66':'none'}">${team}</div>
+          <div style="display:inline-block;font-family:'Bebas Neue',Impact,sans-serif;font-size:.6rem;letter-spacing:.15em;padding:2px 8px;border-radius:2px;border:1px solid ${meta.color}66;color:${meta.color};margin-bottom:8px">${meta.short} · ${meta.label}</div>
+          <div style="display:block;margin-top:2px"><span style="display:inline-block;background:${badgeBg};color:${badgeFg};font-family:'Bebas Neue',Impact,sans-serif;font-size:.65rem;letter-spacing:.12em;padding:3px 10px;border-radius:3px;box-shadow:0 0 8px ${badgeBg}88">${ts.label}</span></div>
+        </div>`;
+      }).join('');
+      hero.innerHTML = `
+        <div style="position:relative;background:linear-gradient(135deg,#040d07 0%,#071510 50%,#040b12 100%);border:2px solid ${cp.avatar_color}55;border-left:5px solid ${cp.avatar_color};border-radius:10px;padding:28px 28px 24px;box-shadow:0 0 40px ${cp.avatar_color}18,inset 0 0 60px rgba(0,0,0,.4)">
+          <div class="locked-stamp stamp-anim">LOCKED IN</div>
+          <div style="position:absolute;top:-60px;left:-60px;width:300px;height:300px;background:${cp.avatar_color}07;border-radius:50%;pointer-events:none;filter:blur(50px)"></div>
+          <div style="position:absolute;bottom:-40px;right:-40px;width:200px;height:200px;background:${cp.avatar_color}05;border-radius:50%;pointer-events:none;filter:blur(40px)"></div>
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:22px;position:relative">
+            <div style="width:68px;height:68px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',Impact,sans-serif;font-size:1.8rem;flex-shrink:0;background:${cp.avatar_color}1a;border:3px solid ${cp.avatar_color};color:${cp.avatar_color};box-shadow:0 0 20px ${cp.avatar_color}55,inset 0 0 20px ${cp.avatar_color}0a">${cp.avatar_initial}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-family:'Bebas Neue',Impact,sans-serif;font-size:2.2rem;line-height:.95;color:#fff;letter-spacing:.04em;text-shadow:0 0 30px ${cp.avatar_color}88">${cp.name}</div>
+              <div style="display:flex;align-items:center;gap:10px;margin-top:5px;flex-wrap:wrap">
+                <span style="font-family:'Bebas Neue',Impact,sans-serif;font-size:.85rem;letter-spacing:.12em;color:${aliveColor}">${alive}/4 TEAMS ALIVE</span>
+                <span style="font-size:.65rem;color:#3a5a70;letter-spacing:.1em">· WC 2026</span>
+              </div>
+            </div>
+            <button onclick="App.showSquad('${cp.id}')" class="btn-neon" style="font-size:.85rem;padding:.45rem 1.3rem;flex-shrink:0;letter-spacing:.08em">⚽ MY SQUAD</button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;position:relative">${teamCards}</div>
+          ${heroBanner}
+        </div>`;
+    } else {
+      hero.classList.add('hidden');
+      othersLabel.classList.add('hidden');
+      regLabel.classList.remove('hidden');
+    }
+
+    // ── Other players grid ────────────────────────────────────────────
     const grid=document.getElementById('players-grid');
     const slots=document.getElementById('empty-slots');
     grid.innerHTML='';slots.innerHTML='';
 
-    players.forEach((p,idx)=>{
-      const isMe=cp&&p.id===cp.id;
+    const others = draw_done && mySquad ? players.filter(p=>p.id!==cp.id) : players;
+    others.forEach((p,idx)=>{
       const squad=squads[p.id];
       const card=document.createElement('div');
       card.className='panel-bright p-4 relative reveal-up';
       card.style.animationDelay=`${idx*.07}s`;card.style.opacity='0';
-      if(isMe) card.style.border='1px solid var(--neon)66';
 
       let squadHtml='';
       if(squad&&draw_done){
@@ -1207,20 +1344,24 @@ const App = {
       }
 
       const score = squad&&draw_done ? squadScore(squad) : null;
-      const rating = score !== null ? squadRating(score) : null;
+      const rating = (score !== null && this._hostVerified) ? squadRating(score) : null;
+      const alive = (squad&&draw_done) ? countAlive(squad, this._state.bracket||null, this._state.champion||'') : null;
+      const aliveColor = alive===4?'var(--neon)':alive===3?'var(--blue)':alive===2?'#ff8800':alive===1?'#ff2244':'#5a5a5a';
+      const aliveHtml = alive!==null ? `<div style="font-family:'Bebas Neue',Impact,sans-serif;font-size:.7rem;letter-spacing:.08em;color:${aliveColor};margin-top:2px">${alive}/4 TEAMS ALIVE</div>` : '';
       card.innerHTML=`
         ${draw_done?'<div class="locked-stamp stamp-anim">LOCKED IN</div>':''}
         <div class="flex items-center gap-3">
           <div class="avatar" style="background:${p.avatar_color}22;border-color:${p.avatar_color};color:${p.avatar_color}">${p.avatar_initial}</div>
           <div class="flex-1 min-w-0">
-            <div class="font-bold text-base truncate" style="color:${isMe?'var(--neon)':'#e2e8f0'}">${p.name}${isMe?' <span style="font-size:.7rem;color:var(--neon)44">(YOU)</span>':''}</div>
-            ${(isMe||this._hostVerified)?`<div class="text-xs" style="color:#3a5a70">${p.email}</div>`:''}
+            <div class="font-bold text-base truncate" style="color:#e2e8f0">${p.name}</div>
+            ${this._hostVerified?`<div class="text-xs" style="color:#3a5a70">${p.email}</div>`:''}
             ${rating?`<div style="font-family:'Bebas Neue',Impact,sans-serif;font-size:.7rem;letter-spacing:.08em;color:${rating.color};margin-top:2px">${rating.label} · ${score}/${MAX_SQUAD_SCORE}</div>`:''}
+            ${aliveHtml}
           </div>
           <div class="text-xs px-2 py-1 rounded" style="background:#00ff4122;color:var(--neon);border:1px solid var(--neon)22">REGISTERED</div>
         </div>
         ${squadHtml}
-        ${(draw_done&&squad)?`<button class="btn-${isMe?'neon':'red'} w-full mt-3 py-2" style="font-size:.9rem" onclick="App.showSquad('${p.id}')">${isMe?'⚽ VIEW MY SQUAD':'👁️ VIEW SQUAD'}</button>`:''}
+        ${(draw_done&&squad)?`<button class="btn-red w-full mt-3 py-2" style="font-size:.9rem" onclick="App.showSquad('${p.id}')">👁️ VIEW SQUAD</button>`:''}
       `;
       grid.appendChild(card);
     });
@@ -1235,7 +1376,7 @@ const App = {
     // Standings
     const standingsSection=document.getElementById('standings-section');
     const standingsList=document.getElementById('standings-list');
-    if(draw_done && players.length > 0){
+    if(draw_done && players.length > 0 && this._hostVerified){
       standingsSection.classList.remove('hidden');
       const ranked=[...players].map(p=>({p, score:squadScore(squads[p.id]||{})})).sort((a,b)=>b.score-a.score);
       const medals=['🥇','🥈','🥉'];
@@ -1293,42 +1434,180 @@ const App = {
       fb.classList.add('hidden');
     }
 
-    // Squad score badge
-    const score=squadScore(squad);
-    const rating=squadRating(score);
-    const pct=Math.round(((score-MIN_SQUAD_SCORE)/(MAX_SQUAD_SCORE-MIN_SQUAD_SCORE))*100);
+    // Squad score badge — host only
     const badge=document.getElementById('squad-score-badge');
-    badge.style.display='inline-flex';badge.classList.remove('hidden');
-    const bar=document.getElementById('squad-score-bar');
-    bar.style.width='0%';bar.style.background=rating.color;bar.style.boxShadow=`0 0 8px ${rating.color}`;
-    setTimeout(()=>bar.style.width=`${pct}%`,100);
-    document.getElementById('squad-score-label').style.color=rating.color;
-    document.getElementById('squad-score-label').textContent=`${rating.label} · ${score} / ${MAX_SQUAD_SCORE}`;
+    if (this._hostVerified) {
+      const score=squadScore(squad);
+      const rating=squadRating(score);
+      const pct=Math.round(((score-MIN_SQUAD_SCORE)/(MAX_SQUAD_SCORE-MIN_SQUAD_SCORE))*100);
+      badge.style.display='inline-flex';badge.classList.remove('hidden');
+      const bar=document.getElementById('squad-score-bar');
+      bar.style.width='0%';bar.style.background=rating.color;bar.style.boxShadow=`0 0 8px ${rating.color}`;
+      setTimeout(()=>bar.style.width=`${pct}%`,100);
+      document.getElementById('squad-score-label').style.color=rating.color;
+      document.getElementById('squad-score-label').textContent=`${rating.label} · ${score} / ${MAX_SQUAD_SCORE}`;
+    } else {
+      badge.style.display='none';badge.classList.add('hidden');
+    }
+    const bracket = this._state.bracket || null;
     document.getElementById('squad-cards').innerHTML=Object.entries(squad).map(([tier,team],idx)=>{
       const meta=TIER_META[tier];
-      const isChamp = team === champion;
-      const isFinal = team === finalist_1 || team === finalist_2;
-      const statusBadge = isChamp
-        ? `<div style="display:inline-block;background:var(--gold);color:#000;font-family:'Bebas Neue',Impact,sans-serif;font-size:.65rem;letter-spacing:.1em;padding:2px 8px;border-radius:2px;margin-top:6px;box-shadow:0 0 10px var(--gold)">🏆 CHAMPIONS</div>`
-        : isFinal
-        ? `<div style="display:inline-block;background:var(--neon);color:#000;font-family:'Bebas Neue',Impact,sans-serif;font-size:.65rem;letter-spacing:.1em;padding:2px 8px;border-radius:2px;margin-top:6px;box-shadow:0 0 8px var(--neon)">🏟️ FINALIST</div>`
-        : `<div style="display:inline-block;background:var(--neon);color:#000;font-family:'Bebas Neue',Impact,sans-serif;font-size:.65rem;letter-spacing:.1em;padding:2px 6px;border-radius:2px;margin-top:6px;box-shadow:0 0 8px var(--neon)">LOCKED IN</div>`;
-      return `<div class="team-card panel p-3 text-center relative reveal-up" style="animation-delay:${idx*.1}s;opacity:0;border-top:3px solid ${isChamp?'var(--gold)':isFinal?'var(--neon)':meta.color}${isChamp?';box-shadow:0 0 16px var(--gold)44':''}">
+      const ts = getTeamStatus(team, bracket, champion);
+      const isChamp = ts.stage === 'champion';
+      const isFinal = ts.stage === 'final';
+      const isElim  = ts.stage === 'eliminated';
+      const borderCol = isChamp ? 'var(--gold)' : isFinal ? 'var(--neon)' : isElim ? '#ff224444' : meta.color;
+      const nameCol   = isChamp ? 'var(--gold)' : isFinal ? 'var(--neon)' : isElim ? '#5a5a5a' : '#e2e8f0';
+      const badgeBg   = isChamp ? 'var(--gold)' : isElim ? '#ff2244' : ts.color;
+      const badgeFg   = (isChamp || isElim) ? '#fff' : '#000';
+      const glow      = isChamp ? ';box-shadow:0 0 16px var(--gold)44' : '';
+      const statusBadge = `<div style="display:inline-block;background:${badgeBg};color:${badgeFg};font-family:'Bebas Neue',Impact,sans-serif;font-size:.6rem;letter-spacing:.1em;padding:2px 7px;border-radius:2px;margin-top:6px;box-shadow:0 0 8px ${badgeBg}44;${isElim?'opacity:.7':''}">${ts.label}</div>`;
+      return `<div class="team-card panel p-3 text-center relative reveal-up" style="animation-delay:${idx*.1}s;opacity:0;border-top:3px solid ${borderCol}${glow}${isElim?';opacity:.55':''}">
         <div class="tier-badge ${meta.cls} mb-2">${meta.short} · ${meta.label}</div>
         <div class="text-4xl mb-2">${FLAGS[team]||'🏳️'}</div>
-        <div class="text-base font-bold" style="color:${isChamp?'var(--gold)':isFinal?'var(--neon)':'#e2e8f0'}">${team}</div>
+        <div class="text-base font-bold" style="color:${nameCol}">${team}</div>
         ${statusBadge}
       </div>`;
     }).join('');
 
-    if(!this._rivalryCache[player.id]){
-      const others=this._state.players.filter(p=>p.id!==player.id).slice(0,4);
-      this._rivalryCache[player.id]=others.map(o=>{
-        const line=RIVALRY_LINES[Math.floor(Math.random()*RIVALRY_LINES.length)];
-        return line.replace('{a}',player.name).replace('{b}',o.name);
-      });
-    }
-    document.getElementById('rivalry-list').innerHTML=this._rivalryCache[player.id].map(line=>`<div class="text-sm py-1" style="color:#5a8aaa;border-bottom:1px solid #1e3040">${line}</div>`).join('');
+    // Squad news — generated from live bracket state
+    this.renderSquadNews(player, squad, this._state.bracket||null, champion, finalist_1, finalist_2);
+
+    // Kick off match schedule (non-blocking)
+    this.renderMatchSchedule(Object.values(squad));
+  },
+
+  renderSquadNews(player, squad, bracket, champion, finalist_1, finalist_2) {
+    const el = document.getElementById('squad-news-list');
+    if (!el) return;
+    const ROUND_NAMES = {r32:'Round of 32',r16:'Round of 16',qf:'Quarterfinal',sf:'Semifinal',final:'Final'};
+    const ROUNDS = ['r32','r16','qf','sf','final'];
+
+    // Find the match a team played in a given round
+    const findMatch = (team, rk) => (bracket?.[rk]||[]).find(m=>m.home===team||m.away===team);
+    // Find opponent in a match
+    const opponent = (m, team) => m.home===team ? m.away : m.home;
+
+    const items = Object.entries(squad).map(([tier, team]) => {
+      const ts = getTeamStatus(team, bracket, champion);
+      const flag = FLAGS[team]||'🏳️';
+      const meta = TIER_META[tier];
+
+      let headline = '', detail = '', accentColor = ts.color;
+
+      if (ts.stage === 'champion') {
+        headline = `${flag} ${team} ARE WORLD CHAMPIONS`;
+        detail = `${player.name} wins $250 — ${team} lifted the World Cup trophy!`;
+        accentColor = 'var(--gold)';
+      } else if (ts.stage === 'final') {
+        const sfMatch = findMatch(team, 'sf');
+        const sfOpp = sfMatch ? opponent(sfMatch, team) : '';
+        headline = `${flag} ${team} REACHED THE FINAL`;
+        detail = sfOpp ? `Beat ${FLAGS[sfOpp]||''} ${sfOpp} in the Semifinal — ${player.name} wins a prize!` : `${player.name} wins a prize!`;
+        accentColor = 'var(--neon)';
+      } else if (ts.stage === 'eliminated') {
+        // Find the round they lost in
+        let lostRound = '', lostTo = '';
+        for (const rk of ROUNDS) {
+          const m = findMatch(team, rk);
+          if (m?.winner && m.winner !== team) { lostRound = rk; lostTo = opponent(m, team); break; }
+        }
+        headline = `${flag} ${team} ELIMINATED`;
+        detail = lostTo ? `Lost to ${FLAGS[lostTo]||''} ${lostTo} in the ${ROUND_NAMES[lostRound]||lostRound}` : 'Knocked out of the tournament';
+        accentColor = '#ff2244';
+      } else if (ts.stage === 'group') {
+        headline = `${flag} ${team} — GROUP STAGE`;
+        detail = 'Awaiting their first knockout match';
+        accentColor = '#3a5a70';
+      } else {
+        // Active in a bracket round
+        const rk = ts.stage;
+        const m = findMatch(team, rk);
+        // Find how they got here — last win
+        let lastWin = '', lastOpp = '';
+        for (let i = ROUNDS.indexOf(rk)-1; i >= 0; i--) {
+          const prev = findMatch(team, ROUNDS[i]);
+          if (prev?.winner===team) { lastWin=ROUNDS[i]; lastOpp=opponent(prev,team); break; }
+        }
+        headline = `${flag} ${team} — ${ts.label}`;
+        if (lastOpp) detail = `Advanced past ${FLAGS[lastOpp]||''} ${lastOpp} in the ${ROUND_NAMES[lastWin]||lastWin}`;
+        else detail = `In the ${ROUND_NAMES[rk]||rk}`;
+        if (m && !m.winner) {
+          const foe = opponent(m, team);
+          if (foe) detail += ` · Next up: ${FLAGS[foe]||''} ${foe}`;
+        }
+      }
+
+      return `<div style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid #1e3040">
+        <div style="width:3px;border-radius:2px;background:${accentColor};flex-shrink:0;align-self:stretch;min-height:36px"></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-family:'Bebas Neue',Impact,sans-serif;font-size:.8rem;letter-spacing:.08em;color:${accentColor}">${headline}</div>
+          <div style="font-size:.72rem;color:#5a8aaa;margin-top:2px;line-height:1.4">${detail}</div>
+          <div style="font-size:.6rem;color:#2a4060;margin-top:3px;letter-spacing:.08em">${meta.short} · ${meta.label}</div>
+        </div>
+      </div>`;
+    });
+
+    el.innerHTML = items.join('');
+  },
+
+  async renderMatchSchedule(myTeams) {
+    const panel = document.getElementById('matches-panel');
+    const list  = document.getElementById('matches-list');
+    const dot   = document.getElementById('matches-live-dot');
+    if (!panel || !list) return;
+    try {
+      const r = await fetch(`${API}/api/matches`);
+      if (!r.ok) { panel.classList.add('hidden'); return; }
+      const d = await r.json();
+      const mine = (d.matches||[]).filter(m => myTeams.includes(m.home) || myTeams.includes(m.away));
+      if (!mine.length) { panel.classList.add('hidden'); return; }
+
+      const hasLive = mine.some(m => m.status==='IN_PLAY'||m.status==='PAUSED');
+      dot.style.display = hasLive ? 'inline-flex' : 'none';
+
+      const STAGE_LABEL = {r32:'R32',r16:'R16',qf:'QF',sf:'SF',final:'FINAL',group:'GROUP'};
+      const fmt = iso => {
+        const d = new Date(iso);
+        return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' ' +
+               d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+      };
+
+      list.innerHTML = mine.map(m => {
+        const live   = m.status==='IN_PLAY'||m.status==='PAUSED';
+        const done   = m.status==='FINISHED';
+        const hMine  = myTeams.includes(m.home);
+        const aMine  = myTeams.includes(m.away);
+        const hName  = `<span style="color:${hMine?'var(--neon)':'#c0d8e8'};font-weight:${hMine?700:400}">${FLAGS[m.home]||'🏳️'} ${m.home}</span>`;
+        const aName  = `<span style="color:${aMine?'var(--neon)':'#c0d8e8'};font-weight:${aMine?700:400}">${FLAGS[m.away]||'🏳️'} ${m.away}</span>`;
+        const scoreStr = (done||live) && m.homeScore!=null ? `<span style="color:${live?'var(--neon)':'#e2e8f0'};font-family:'Bebas Neue',Impact,sans-serif;font-size:1rem">${m.homeScore} – ${m.awayScore}</span>` : `<span style="color:#3a5a70">vs</span>`;
+        const stagePill = `<span style="font-family:'Bebas Neue',Impact,sans-serif;font-size:.6rem;letter-spacing:.1em;background:#1e3040;color:var(--blue);padding:1px 6px;border-radius:2px">${STAGE_LABEL[m.stage]||m.stage}</span>`;
+        const timePart = live
+          ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:.6rem;color:var(--neon);font-family:monospace"><span style="width:5px;height:5px;border-radius:50%;background:var(--neon);box-shadow:0 0 4px var(--neon);display:inline-block"></span>LIVE</span>`
+          : `<span style="font-size:.65rem;color:#3a5a70">${fmt(m.utcDate)}</span>`;
+        return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #1e3040;flex-wrap:wrap">
+          ${stagePill}
+          <div style="flex:1;min-width:0;display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:.8rem">${hName}${scoreStr}${aName}</div>
+          ${timePart}
+        </div>`;
+      }).join('');
+
+      panel.classList.remove('hidden');
+
+      // Auto-refresh every 2 min while squad page is visible
+      if (this._matchRefreshTimer) clearTimeout(this._matchRefreshTimer);
+      if (hasLive) {
+        this._matchRefreshTimer = setTimeout(()=>{
+          if (!document.getElementById('page-squad').classList.contains('hidden'))
+            this.renderMatchSchedule(myTeams);
+        }, 60000);
+      } else {
+        this._matchRefreshTimer = setTimeout(()=>{
+          if (!document.getElementById('page-squad').classList.contains('hidden'))
+            this.renderMatchSchedule(myTeams);
+        }, 120000);
+      }
+    } catch { panel.classList.add('hidden'); }
   },
 
   // ── Bracket ──────────────────────────────────────────────────────────
@@ -1364,13 +1643,8 @@ const App = {
       return;
     }
 
-    // Build team→owner map for highlighting
-    const ownerMap = {};
-    for (const p of this._state.players) {
-      const sq = this._state.squads[p.id] || {};
-      for (const team of Object.values(sq)) ownerMap[team] = p;
-    }
     const champion = this._state.champion;
+    const myTeamSet = new Set(Object.values(this._state.squads[this.currentPlayer?.id] || {}));
 
     const ROUNDS = [
       {key:'r32',  label:'ROUND OF 32', count:16},
@@ -1387,16 +1661,16 @@ const App = {
 
     const makeTeamRow = (team, isWinner) => {
       if (!team) return `<div class="bm-team"><span class="bm-flag">·</span><span class="bm-name" style="color:#2a4060;font-style:italic">TBD</span></div>`;
-      const owner = ownerMap[team];
       const isChamp = team === champion;
+      const isMine  = myTeamSet.has(team);
       let cls = 'bm-team';
       if (isChamp) cls += ' champion-team';
+      else if (isMine) cls += ' mine';
       else if (isWinner) cls += ' winner';
-      else if (owner) cls += ' my-team';
-      const ownerDot = owner ? `<span class="bm-owner" style="background:${owner.avatar_color}" title="${owner.name}"></span>` : '';
+      const mineDot = isMine ? `<span class="bm-owner" style="background:${this.currentPlayer?.avatar_color||'var(--neon)'}" title="Your team"></span>` : '';
       const wBadge = isChamp ? `<span class="bm-w-badge" style="background:var(--gold)">🏆</span>`
                    : isWinner ? `<span class="bm-w-badge">W</span>` : '';
-      return `<div class="${cls}">${ownerDot}<span class="bm-flag">${FLAGS[team]||'🏳️'}</span><span class="bm-name">${team}</span>${wBadge}</div>`;
+      return `<div class="${cls}">${mineDot}<span class="bm-flag">${FLAGS[team]||'🏳️'}</span><span class="bm-name">${team}</span>${wBadge}</div>`;
     };
 
     let html = '';
@@ -1414,9 +1688,11 @@ const App = {
 
       for (let i = 0; i < count; i++) {
         const m = matches[i] || {home:'',away:'',winner:''};
+        if (!m.home && !m.away && !this._hostVerified) continue;
         const top = Math.round(i * slotH + offsetTop + 22); // +22 for header
         const canEdit = this._hostVerified;
-        html += `<div class="bracket-match${m.winner?' has-winner':''}" style="top:${top}px;height:${MATCH_H}px" ${canEdit?`onclick="App.openBracketModal('${key}',${i})"`:''}>
+        const isEmpty = !m.home && !m.away;
+        html += `<div class="bracket-match${m.winner?' has-winner':''}${isEmpty?' bracket-match-empty':''}" style="top:${top}px;height:${MATCH_H}px" ${canEdit?`onclick="App.openBracketModal('${key}',${i})"`:''}>
           <div class="bracket-match-inner">
             ${makeTeamRow(m.home, m.winner && m.winner===m.home)}
             <div class="bm-sep"></div>
