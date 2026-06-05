@@ -36,15 +36,14 @@ PORT = int(os.getenv("PORT", "8000"))
 # ---------------------------------------------------------------------------
 
 TIERS = {
-    "tier1": ["Brazil","France","England","Argentina","Spain","Germany","Portugal","Belgium"],
-    "tier2": ["Netherlands","Italy","Croatia","Uruguay","Denmark","Mexico","USA","Japan"],
-    "tier3": ["Colombia","Morocco","Senegal","Switzerland","Poland","Sweden","Serbia","Iran"],
-    "tier4": ["South Korea","Australia","Egypt","Nigeria","Cameroon","Ghana","Tunisia","Algeria"],
-    "tier5": ["Peru","Chile","Ecuador","Paraguay","Venezuela","Bolivia","Costa Rica","Panama"],
-    "tier6": ["Canada","Jamaica","Honduras","Saudi Arabia","Uzbekistan","Iraq","Qatar","New Zealand"],
+    "tier1": ["Brazil","France","England","Argentina","Spain","Germany","Portugal","Belgium","Netherlands","Italy","Croatia","Uruguay"],
+    "tier2": ["Denmark","Mexico","USA","Japan","Colombia","Morocco","Senegal","Switzerland","Poland","Sweden","Serbia","Iran"],
+    "tier3": ["South Korea","Australia","Egypt","Nigeria","Cameroon","Ghana","Tunisia","Algeria","Peru","Chile","Ecuador","Paraguay"],
+    "tier4": ["Venezuela","Bolivia","Costa Rica","Panama","Canada","Jamaica","Honduras","Saudi Arabia","Uzbekistan","Iraq","Qatar","New Zealand"],
 }
 
-AVATAR_COLORS = ["#00ff41","#00d4ff","#ffd700","#cc44ff","#ff8800","#ff2244","#00ff88","#ff44cc"]
+AVATAR_COLORS = ["#00ff41","#00d4ff","#ffd700","#cc44ff","#ff8800","#ff2244","#00ff88","#ff44cc",
+                 "#44ffff","#ff6622","#88ff00","#ff0088"]
 
 # ---------------------------------------------------------------------------
 # Database — SQLite for persistence across Railway restarts
@@ -230,8 +229,8 @@ async def api_register(req: RegisterRequest):
     players = db_get_players()
     if any(p["email"] == email for p in players):
         raise HTTPException(409, "Email already registered")
-    if len(players) >= 8:
-        raise HTTPException(403, "Tournament is full (8/8)")
+    if len(players) >= 12:
+        raise HTTPException(403, "Tournament is full (12/12)")
 
     player = {
         "id": str(uuid.uuid4()),
@@ -263,8 +262,8 @@ async def api_draw(req: HostRequest):
         raise HTTPException(403, "Wrong password")
 
     players = db_get_players()
-    if len(players) < 8:
-        raise HTTPException(400, f"Need 8 players, only {len(players)} registered")
+    if len(players) < 12:
+        raise HTTPException(400, f"Need 12 players, only {len(players)} registered")
     if db_is_draw_done():
         raise HTTPException(409, "Draw already completed")
 

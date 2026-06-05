@@ -401,11 +401,11 @@ body,h1,h2,h3,p{margin:0;padding:0}
       </svg>
     </div>
     <div style="flex-shrink:0">
-      <div class="text-sm tracking-widest uppercase" style="color:var(--blue);margin-bottom:4px">⚡ Private Tournament · 8 Players · Fair Draw</div>
+      <div class="text-sm tracking-widest uppercase" style="color:var(--blue);margin-bottom:4px">⚡ Private Tournament · 12 Players · Fair Draw</div>
       <h1 class="hero-title bebas" style="font-size:clamp(2.2rem,7vw,7rem)">WORLD CUP<br>2026<br><span class="draft-glow" style="font-size:60%">PRIVATE DRAFT</span></h1>
     </div>
     <div style="flex-shrink:0">
-      <p class="text-base max-w-md mx-auto" style="color:#7a9ab8">48 nations. 6 tiers. One champion. Every squad decided by fate.</p>
+      <p class="text-base max-w-md mx-auto" style="color:#7a9ab8">48 nations. 4 tiers. One champion. Every squad decided by fate.</p>
       <div class="host-nations" style="margin-top:6px">
         <span class="host-flag"><span class="hf-emoji">🇺🇸</span><span class="hf-name">USA</span></span>
         <span class="host-sep">·</span>
@@ -424,7 +424,7 @@ body,h1,h2,h3,p{margin:0;padding:0}
     </div>
     <div class="scoreboard mx-auto" style="max-width:260px;flex-shrink:0">
       <div class="scoreboard-label">Players In The Tunnel</div>
-      <div class="scoreboard-num" id="landing-counter">0 / 8</div>
+      <div class="scoreboard-num" id="landing-counter">0 / 12</div>
       <div class="scoreboard-bar">
         <div class="scoreboard-fill" id="landing-progress" style="width:0%"></div>
       </div>
@@ -437,6 +437,10 @@ body,h1,h2,h3,p{margin:0;padding:0}
         <div class="player-slot" id="slot-5">·</div>
         <div class="player-slot" id="slot-6">·</div>
         <div class="player-slot" id="slot-7">·</div>
+        <div class="player-slot" id="slot-8">·</div>
+        <div class="player-slot" id="slot-9">·</div>
+        <div class="player-slot" id="slot-10">·</div>
+        <div class="player-slot" id="slot-11">·</div>
       </div>
     </div>
   </div>
@@ -476,11 +480,11 @@ body,h1,h2,h3,p{margin:0;padding:0}
         <div class="text-xs uppercase tracking-widest mb-1" style="color:#3a5a70">Tournament Status</div>
         <div class="text-3xl bebas" id="dash-status-text" style="color:var(--neon)">REGISTRATIONS OPEN</div>
         <div class="prog-track mt-2" style="width:260px"><div class="prog-fill" id="dash-progress" style="width:0%"></div></div>
-        <div class="text-sm mt-1" style="color:#5a8aaa"><span id="dash-counter" class="font-bold" style="color:var(--neon)">0</span> / 8 players registered</div>
+        <div class="text-sm mt-1" style="color:#5a8aaa"><span id="dash-counter" class="font-bold" style="color:var(--neon)">0</span> / 12 players registered</div>
       </div>
       <div id="draw-zone" class="hidden text-center">
         <button id="btn-draw" class="btn-gold pulse-gold" style="font-size:1.2rem;padding:.75rem 2rem" onclick="App.triggerDraw()" disabled>🎲 DRAW THE SQUADS</button>
-        <div id="draw-hint" class="text-xs mt-2" style="color:#5a8aaa">All 8 players must register first</div>
+        <div id="draw-hint" class="text-xs mt-2" style="color:#5a8aaa">All 12 players must register first</div>
       </div>
       <div id="view-squad-zone" class="hidden">
         <button class="btn-neon" onclick="App.showSquad()">⚽ VIEW MY SQUAD</button>
@@ -573,11 +577,9 @@ body,h1,h2,h3,p{margin:0;padding:0}
 
 const TIER_META = {
   tier1:{label:"GOD TIER",    short:"T1",color:"var(--gold)",cls:"t1"},
-  tier2:{label:"ELITE",       short:"T2",color:"var(--blue)",cls:"t2"},
-  tier3:{label:"CONTENDERS",  short:"T3",color:"var(--neon)",cls:"t3"},
-  tier4:{label:"DARK HORSES", short:"T4",color:"#ff8800",    cls:"t4"},
-  tier5:{label:"WILDCARDS",   short:"T5",color:"#cc44ff",    cls:"t5"},
-  tier6:{label:"UNDERDOGS",   short:"T6",color:"var(--red)", cls:"t6"},
+  tier2:{label:"CONTENDERS",  short:"T2",color:"var(--blue)",cls:"t2"},
+  tier3:{label:"DARK HORSES", short:"T3",color:"var(--neon)",cls:"t3"},
+  tier4:{label:"WILDCARDS",   short:"T4",color:"#cc44ff",    cls:"t4"},
 };
 
 const FLAGS = {
@@ -599,8 +601,8 @@ const TEAM_STRENGTH = {
   "Peru":40,"Chile":38,"Ecuador":36,"Paraguay":34,"Venezuela":32,"Bolivia":30,"Costa Rica":28,"Panama":26,
   "Canada":25,"Jamaica":22,"Honduras":19,"Saudi Arabia":16,"Uzbekistan":13,"Iraq":12,"Qatar":11,"New Zealand":10,
 };
-const MAX_SQUAD_SCORE = 374; // 100+84+70+55+40+25 — getting the top team in every tier
-const MIN_SQUAD_SCORE = 290; // 86+71+56+41+26+10 — getting the weakest team in every tier
+const MAX_SQUAD_SCORE = 263; // 100+76+55+32 — top team in each of 4 tiers
+const MIN_SQUAD_SCORE = 178; // 78+56+34+10 — worst team in each of 4 tiers
 
 function squadScore(squad) {
   return Object.values(squad).reduce((s,t)=>s+(TEAM_STRENGTH[t]||0),0);
@@ -799,12 +801,12 @@ const App = {
 
   onStateUpdate(type) {
     const n = this._state.count;
-    document.getElementById('landing-counter').textContent=`${n} / 8`;
-    for(let i=0;i<8;i++){const s=document.getElementById('slot-'+i);if(s){const p=this._state.players[i];s.className='player-slot'+(i<n?' filled':'');s.textContent=i<n?(p?.avatar_initial||'✓'):'·';if(p&&i<n)s.style.color=p.avatar_color;else s.style.color='';}}
-    document.getElementById('landing-progress').style.width=`${(n/8)*100}%`;
+    document.getElementById('landing-counter').textContent=`${n} / 12`;
+    for(let i=0;i<12;i++){const s=document.getElementById('slot-'+i);if(s){const p=this._state.players[i];s.className='player-slot'+(i<n?' filled':'');s.textContent=i<n?(p?.avatar_initial||'✓'):'·';if(p&&i<n)s.style.color=p.avatar_color;else s.style.color='';}}
+    document.getElementById('landing-progress').style.width=`${(n/12)*100}%`;
     const joinBtn=document.getElementById('btn-join');
     if(joinBtn){
-      const full=n>=8||this._state.draw_done;
+      const full=n>=12||this._state.draw_done;
       joinBtn.disabled=full;
       const inner=joinBtn.querySelector('.btn-inner');
       if(inner)inner.innerHTML=full?'<span>🔒</span> SQUAD FULL':'<span>⚡</span><span class="ball-roll">⚽</span> JOIN THE BATTLE';
@@ -927,7 +929,7 @@ const App = {
   },
 
   async triggerDraw() {
-    if(this._state.count<8){toast("Need 8 players first!");return;}
+    if(this._state.count<12){toast("Need 12 players first!");return;}
     if(!confirm('🎲 DRAW THE SQUADS?\n\nRandomly assign 6 teams to each player.\nThis cannot be undone!'))return;
     const loadingEl=document.getElementById('draw-loading');
     loadingEl.classList.add('active');
@@ -954,11 +956,11 @@ const App = {
     const cp = this.currentPlayer;
     document.getElementById('topbar-name').textContent = cp ? cp.name : (this._hostVerified ? '[ HOST ]' : '?');
     document.getElementById('dash-counter').textContent = count;
-    document.getElementById('dash-progress').style.width = `${(count/8)*100}%`;
+    document.getElementById('dash-progress').style.width = `${(count/12)*100}%`;
 
     const statusEl = document.getElementById('dash-status-text');
     if(draw_done){statusEl.textContent='🏆 SQUADS LOCKED IN';statusEl.style.color='var(--gold)';}
-    else if(count===8){statusEl.textContent='⚡ READY TO DRAW';statusEl.style.color='var(--neon)';}
+    else if(count===12){statusEl.textContent='⚡ READY TO DRAW';statusEl.style.color='var(--neon)';}
     else{statusEl.textContent='REGISTRATIONS OPEN';statusEl.style.color='var(--neon)';}
 
     const drawZone=document.getElementById('draw-zone');
@@ -966,8 +968,8 @@ const App = {
     if(draw_done && cp && squads[cp.id]){drawZone.classList.add('hidden');viewZone.classList.remove('hidden');}
     else if(this._hostVerified && !draw_done){
       drawZone.classList.remove('hidden');viewZone.classList.add('hidden');
-      const btn=document.getElementById('btn-draw');btn.disabled=count<8;
-      document.getElementById('draw-hint').textContent=count<8?`Waiting for ${8-count} more player${8-count>1?'s':''}`:'🎲 All in — ready to draw!';
+      const btn=document.getElementById('btn-draw');btn.disabled=count<12;
+      document.getElementById('draw-hint').textContent=count<12?`Waiting for ${12-count} more player${12-count>1?'s':''}`:'🎲 All in — ready to draw!';
     } else {drawZone.classList.add('hidden');viewZone.classList.add('hidden');}
 
     const grid=document.getElementById('players-grid');
@@ -984,7 +986,7 @@ const App = {
 
       let squadHtml='';
       if(squad&&draw_done){
-        squadHtml=`<div class="mt-3 grid grid-cols-3 gap-2">${Object.entries(squad).map(([tier,team])=>`
+        squadHtml=`<div class="mt-3 grid grid-cols-2 gap-2">${Object.entries(squad).map(([tier,team])=>`
           <div class="text-center p-1 rounded" style="background:#0a1418;border:1px solid #1e3040">
             <div class="text-lg">${FLAGS[team]||'🏳️'}</div>
             <div class="text-xs font-bold truncate" style="color:#c0d8e8">${team}</div>
@@ -1011,10 +1013,10 @@ const App = {
       grid.appendChild(card);
     });
 
-    for(let i=0;i<8-count;i++){
+    for(let i=0;i<12-count;i++){
       const s=document.createElement('div');
       s.className='panel p-4 flex items-center gap-3';s.style.opacity='.4';
-      s.innerHTML=`<div class="avatar" style="border-color:#2a4060;color:#2a4060;border-style:dashed">?</div><div><div class="font-bold text-sm" style="color:#2a4060">AWAITING PLAYER</div><div class="text-xs" style="color:#1e3040">Slot ${count+i+1} of 8</div></div>`;
+      s.innerHTML=`<div class="avatar" style="border-color:#2a4060;color:#2a4060;border-style:dashed">?</div><div><div class="font-bold text-sm" style="color:#2a4060">AWAITING PLAYER</div><div class="text-xs" style="color:#1e3040">Slot ${count+i+1} of 12</div></div>`;
       slots.appendChild(s);
     }
 
