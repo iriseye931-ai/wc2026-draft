@@ -78,6 +78,7 @@ def init_db():
         conn.execute("INSERT OR IGNORE INTO tournament VALUES ('finalist_1', '')")
         conn.execute("INSERT OR IGNORE INTO tournament VALUES ('finalist_2', '')")
         conn.execute("INSERT OR IGNORE INTO tournament VALUES ('champion', '')")
+        conn.execute("INSERT OR IGNORE INTO tournament VALUES ('bracket', '')")
         conn.commit()
 
 def db_get_players():
@@ -140,12 +141,36 @@ def db_set_champion(team: str):
         conn.execute("INSERT OR REPLACE INTO tournament VALUES ('champion', ?)", (team,))
         conn.commit()
 
+def _empty_bracket():
+    def matches(n): return [{"home":"","away":"","winner":""} for _ in range(n)]
+    return {"r32": matches(16), "r16": matches(8), "qf": matches(4), "sf": matches(2), "final": matches(1)}
+
+# Maps (round, idx) → (next_round, next_idx, "home"|"away")
+_ADVANCE = {}
+for _i in range(16): _ADVANCE[("r32",_i)] = ("r16", _i//2, "home" if _i%2==0 else "away")
+for _i in range(8):  _ADVANCE[("r16",_i)] = ("qf",  _i//2, "home" if _i%2==0 else "away")
+for _i in range(4):  _ADVANCE[("qf", _i)] = ("sf",  _i//2, "home" if _i%2==0 else "away")
+for _i in range(2):  _ADVANCE[("sf", _i)] = ("final",   0, "home" if _i%2==0 else "away")
+
+def db_get_bracket():
+    with get_db() as conn:
+        row = conn.execute("SELECT value FROM tournament WHERE key='bracket'").fetchone()
+        if row and row["value"]:
+            return json.loads(row["value"])
+        return _empty_bracket()
+
+def db_save_bracket(bracket):
+    with get_db() as conn:
+        conn.execute("INSERT OR REPLACE INTO tournament VALUES ('bracket', ?)", (json.dumps(bracket),))
+        conn.commit()
+
 def db_reset():
     with get_db() as conn:
         conn.execute("DELETE FROM players")
         conn.execute("DELETE FROM squads")
         conn.execute("UPDATE tournament SET value='0' WHERE key='draw_done'")
         conn.execute("UPDATE tournament SET value='' WHERE key IN ('finalist_1','finalist_2','champion')")
+        conn.execute("UPDATE tournament SET value='' WHERE key='bracket'")
         conn.commit()
 
 # ---------------------------------------------------------------------------
@@ -229,6 +254,14 @@ class ChampionRequest(BaseModel):
     password: str
     champion: str
 
+class SetMatchRequest(BaseModel):
+    password: str
+    round: str   # r32 | r16 | qf | sf | final
+    idx: int     # 0-based
+    home: str = ""
+    away: str = ""
+    winner: str = ""  # must equal home, away, or ""
+
 # ---------------------------------------------------------------------------
 # Helper — build full state snapshot
 # ---------------------------------------------------------------------------
@@ -238,6 +271,7 @@ def full_state():
     draw_done = db_is_draw_done()
     squads = db_get_squads() if draw_done else {}
     finals = db_get_finals() if draw_done else {"finalist_1": "", "finalist_2": "", "champion": ""}
+    bracket = db_get_bracket() if draw_done else _empty_bracket()
     return {
         "players": players,
         "squads": squads,
@@ -246,6 +280,7 @@ def full_state():
         "finalist_1": finals["finalist_1"],
         "finalist_2": finals["finalist_2"],
         "champion":   finals["champion"],
+        "bracket":    bracket,
     }
 
 # ---------------------------------------------------------------------------
@@ -352,6 +387,53 @@ async def api_set_champion(req: ChampionRequest):
     db_set_champion(req.champion)
     state = full_state()
     await ws_manager.broadcast({"type": "champion_set", **state})
+    return state
+
+
+@app.post("/api/set-match")
+async def api_set_match(req: SetMatchRequest):
+    if req.password != HOST_PASSWORD:
+        raise HTTPException(403, "Wrong password")
+    if not db_is_draw_done():
+        raise HTTPException(400, "Draw not done yet")
+    valid_rounds = ("r32", "r16", "qf", "sf", "final")
+    round_sizes  = {"r32": 16, "r16": 8, "qf": 4, "sf": 2, "final": 1}
+    if req.round not in valid_rounds:
+        raise HTTPException(400, "Invalid round")
+    if req.idx < 0 or req.idx >= round_sizes[req.round]:
+        raise HTTPException(400, "Invalid match index")
+    if req.winner and req.winner not in (req.home, req.away):
+        raise HTTPException(400, "Winner must be home or away team")
+
+    bracket = db_get_bracket()
+    match = bracket[req.round][req.idx]
+    match["home"]   = req.home
+    match["away"]   = req.away
+    match["winner"] = req.winner
+
+    # Auto-advance winner to next round
+    if req.winner:
+        key = (req.round, req.idx)
+        if key in _ADVANCE:
+            nxt_round, nxt_idx, slot = _ADVANCE[key]
+            bracket[nxt_round][nxt_idx][slot] = req.winner
+
+        # Sync sf winners → finalist_1 / finalist_2
+        if req.round == "sf":
+            f1 = bracket["sf"][0].get("winner", "")
+            f2 = bracket["sf"][1].get("winner", "")
+            if f1 and f2:
+                db_set_finals(f1, f2)
+        # Sync final winner → champion
+        if req.round == "final":
+            w = bracket["final"][0].get("winner", "")
+            if w:
+                db_set_champion(w)
+
+    db_save_bracket(bracket)
+    state = full_state()
+    event = "champion_set" if req.round=="final" and req.winner else "bracket_update"
+    await ws_manager.broadcast({"type": event, **state})
     return state
 
 

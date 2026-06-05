@@ -336,6 +336,32 @@ body,h1,h2,h3,p{margin:0;padding:0}
     .draw-trophy { font-size:5rem;animation:draw-spin 1.2s linear infinite;display:inline-block;line-height:1; }
     .draw-text { font-family:'Bebas Neue',Impact,sans-serif;font-size:2.2rem;color:var(--gold);letter-spacing:.15em;text-shadow:0 0 20px var(--gold); animation:draw-pulse-text 1.5s ease-in-out infinite; }
     .draw-sub { font-size:.8rem;color:#5a8aaa;letter-spacing:.25em;text-transform:uppercase; }
+
+    /* ── Bracket ── */
+    .bracket-wrap { overflow-x:auto; padding-bottom:16px; }
+    .bracket-grid { display:flex; gap:0; align-items:flex-start; min-width:min-content; }
+    .bracket-col { display:flex; flex-direction:column; min-width:148px; }
+    .bracket-col-header { font-family:'Bebas Neue',Impact,sans-serif; font-size:.7rem; letter-spacing:.18em; color:#2a4060; text-align:center; padding:6px 0 10px; text-transform:uppercase; border-bottom:1px solid #1e3040; margin-bottom:0; }
+    .bracket-match { position:absolute; left:4px; right:4px; background:#0a1520; border:1px solid #1e3040; border-radius:4px; overflow:hidden; cursor:pointer; transition:border-color .2s; }
+    .bracket-match:hover { border-color:#2a5070; }
+    .bracket-match.has-winner { border-color:#2a4060; }
+    .bracket-match-inner { display:flex; flex-direction:column; }
+    .bm-team { display:flex; align-items:center; gap:5px; padding:5px 8px; font-size:10px; font-family:monospace; color:#5a8aaa; min-height:26px; position:relative; transition:background .15s; }
+    .bm-team.winner { background:#0d2818; color:#e2e8f0; }
+    .bm-team.winner .bm-name { color:var(--neon); font-weight:bold; }
+    .bm-team.champion-team { background:#1a2808 !important; }
+    .bm-team.champion-team .bm-name { color:var(--gold) !important; }
+    .bm-team.my-team { background:#0a1e28; }
+    .bm-team.my-team .bm-name { color:var(--blue); }
+    .bm-sep { height:1px; background:#0f1f2a; }
+    .bm-owner { display:inline-block; width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+    .bm-flag { font-size:12px; line-height:1; flex-shrink:0; }
+    .bm-name { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:10px; }
+    .bm-w-badge { font-family:'Bebas Neue',Impact,sans-serif; font-size:7px; letter-spacing:.1em; padding:1px 4px; border-radius:1px; background:var(--neon); color:#000; flex-shrink:0; }
+    .bracket-connector { display:flex; flex-direction:column; justify-content:center; width:16px; flex-shrink:0; }
+    .bk-line-wrap { flex:1; display:flex; flex-direction:column; }
+    .bk-horiz { height:1px; background:#1e3040; }
+    .bk-vert { width:1px; background:#1e3040; flex:1; margin-left:auto; }
   </style>
 </head>
 <body class="scanline-wrap">
@@ -469,6 +495,7 @@ body,h1,h2,h3,p{margin:0;padding:0}
     </div>
     <div class="flex items-center gap-3">
       <span class="text-sm" style="color:#7a9ab8">Playing as <span id="topbar-name" class="font-bold" style="color:var(--gold)"></span></span>
+      <button onclick="App.showBracket()" style="font-size:.75rem;padding:.3rem .7rem;background:#ffd70011;border:1px solid #ffd70033;color:var(--gold);border-radius:3px;cursor:pointer;font-family:'Bebas Neue',Impact,sans-serif;letter-spacing:.08em">🏟️ BRACKET</button>
       <button onclick="App.copyInviteLink()" style="font-size:.75rem;padding:.3rem .7rem;background:#00d4ff11;border:1px solid #00d4ff33;color:#00d4ff;border-radius:3px;cursor:pointer;font-family:'Bebas Neue',Impact,sans-serif;letter-spacing:.08em">🔗 INVITE</button>
       <button class="btn-red" onclick="App.logout()" style="font-size:.8rem;padding:.3rem .8rem">LOGOUT</button>
     </div>
@@ -568,6 +595,48 @@ body,h1,h2,h3,p{margin:0;padding:0}
     <div class="panel p-4 mt-6">
       <div class="text-xs uppercase tracking-widest mb-3" style="color:#3a5a70">⚔️ Rivalry Meter</div>
       <div id="rivalry-list" class="flex flex-col gap-2 text-sm"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ BRACKET ══════════════════════════════════════════════════ -->
+<section id="page-bracket" class="page hidden">
+  <div class="sticky top-0 z-10 px-4 py-3 flex items-center justify-between" style="background:linear-gradient(180deg,#050e12,transparent);border-bottom:1px solid #1e3040">
+    <button class="btn-red" onclick="App.showDashboard()" style="font-size:.8rem;padding:.3rem .8rem">← BACK</button>
+    <span class="bebas text-xl" style="color:var(--gold)">🏟️ WC 2026 BRACKET</span>
+    <span style="font-size:.7rem;color:#3a5a70;font-family:monospace">TAP MATCH TO EDIT</span>
+  </div>
+  <div class="max-w-full px-2 py-4">
+    <div class="bracket-wrap">
+      <div id="bracket-root" class="bracket-grid"></div>
+    </div>
+  </div>
+  <!-- Edit match modal -->
+  <div id="bracket-modal" class="modal-bg hidden" onclick="if(event.target===this)App.closeBracketModal()">
+    <div class="panel p-5 w-full max-w-xs mx-4" style="border:1px solid var(--gold)44">
+      <div class="bebas text-xl mb-1" style="color:var(--gold)" id="bm-title">EDIT MATCH</div>
+      <div class="text-xs mb-4" style="color:#3a5a70" id="bm-subtitle"></div>
+      <div class="flex flex-col gap-3">
+        <div>
+          <div class="text-xs mb-1" style="color:#5a8aaa;text-transform:uppercase;letter-spacing:.08em">Team 1</div>
+          <select id="bm-home" style="width:100%;background:#0d1117;border:1px solid #2a4060;color:#e2e8f0;padding:6px 8px;border-radius:4px;font-size:12px;font-family:monospace"></select>
+        </div>
+        <div>
+          <div class="text-xs mb-1" style="color:#5a8aaa;text-transform:uppercase;letter-spacing:.08em">Team 2</div>
+          <select id="bm-away" style="width:100%;background:#0d1117;border:1px solid #2a4060;color:#e2e8f0;padding:6px 8px;border-radius:4px;font-size:12px;font-family:monospace"></select>
+        </div>
+        <div>
+          <div class="text-xs mb-1" style="color:#5a8aaa;text-transform:uppercase;letter-spacing:.08em">Winner</div>
+          <select id="bm-winner" style="width:100%;background:#0d1117;border:1px solid #1e3040;color:#e2e8f0;padding:6px 8px;border-radius:4px;font-size:12px;font-family:monospace">
+            <option value="">— TBD —</option>
+          </select>
+        </div>
+      </div>
+      <div id="bm-error" class="text-xs mt-2 hidden" style="color:var(--red)"></div>
+      <div class="flex gap-2 mt-4">
+        <button onclick="App.closeBracketModal()" style="flex:1;font-size:.85rem;padding:6px;background:transparent;border:1px solid #2a4060;color:#5a8aaa;border-radius:4px;cursor:pointer;font-family:'Bebas Neue',Impact,sans-serif">CANCEL</button>
+        <button onclick="App.saveBracketMatch()" style="flex:2;font-size:.85rem;padding:6px;background:var(--gold);color:#000;border:none;border-radius:4px;cursor:pointer;font-family:'Bebas Neue',Impact,sans-serif">SAVE RESULT</button>
+      </div>
     </div>
   </div>
 </section>
@@ -800,11 +869,12 @@ const App = {
   },
 
   showPage(id) {
-    ['page-landing','page-dashboard','page-squad'].forEach(p=>document.getElementById(p).classList.add('hidden'));
+    ['page-landing','page-dashboard','page-squad','page-bracket'].forEach(p=>document.getElementById(p).classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
     window.scrollTo(0,0);
   },
   showDashboard() { this.showPage('page-dashboard'); this.renderDashboard(); },
+  showBracket() { this.showPage('page-bracket'); this.renderBracket(); },
   showSquad(playerId) {
     const pid = playerId || this.currentPlayer?.id;
     const player = this._state.players.find(p=>p.id===pid);
@@ -823,7 +893,7 @@ const App = {
     ws.onmessage = (e) => {
       try {
         const msg = JSON.parse(e.data);
-        this._state = { players: msg.players||[], squads: msg.squads||{}, draw_done: msg.draw_done||false, count: msg.count||0, finalist_1: msg.finalist_1||'', finalist_2: msg.finalist_2||'', champion: msg.champion||'' };
+        this._state = { players: msg.players||[], squads: msg.squads||{}, draw_done: msg.draw_done||false, count: msg.count||0, finalist_1: msg.finalist_1||'', finalist_2: msg.finalist_2||'', champion: msg.champion||'', bracket: msg.bracket||null };
         this.onStateUpdate(msg.type);
       } catch{}
     };
@@ -848,6 +918,7 @@ const App = {
       if(inner)inner.innerHTML=full?'<span>🔒</span> SQUAD FULL':'<span>⚡</span><span class="ball-roll">⚽</span> JOIN THE BATTLE';
     }
     if (!document.getElementById('page-dashboard').classList.contains('hidden')) this.renderDashboard();
+    if (!document.getElementById('page-bracket').classList.contains('hidden')) this.renderBracket();
     if (!document.getElementById('page-squad').classList.contains('hidden') && this._squadViewId) {
       const player = this._state.players.find(p=>p.id===this._squadViewId);
       const squad = this._state.squads[this._squadViewId];
@@ -858,6 +929,9 @@ const App = {
       document.getElementById('draw-loading').classList.remove('active');
       toast("🏆 SQUADS DRAWN! Destiny decided!", 6000);
       Confetti.burst();
+    }
+    if (type === 'bracket_update') {
+      toast('📊 Bracket updated!', 3000);
     }
     if (type === 'finals_set') {
       toast(`🏟️ THE FINAL IS SET: ${this._state.finalist_1} vs ${this._state.finalist_2}`, 7000);
@@ -1244,6 +1318,163 @@ const App = {
       });
     }
     document.getElementById('rivalry-list').innerHTML=this._rivalryCache[player.id].map(line=>`<div class="text-sm py-1" style="color:#5a8aaa;border-bottom:1px solid #1e3040">${line}</div>`).join('');
+  },
+
+  // ── Bracket ──────────────────────────────────────────────────────────
+
+  renderBracket() {
+    const bracket = this._state.bracket;
+    const root = document.getElementById('bracket-root');
+    if (!bracket || !this._state.draw_done) {
+      root.innerHTML = '<div style="padding:40px;color:#3a5a70;font-family:monospace;font-size:12px">Draw not completed yet — bracket will appear here after the squad draw.</div>';
+      return;
+    }
+
+    // Build team→owner map for highlighting
+    const ownerMap = {};
+    for (const p of this._state.players) {
+      const sq = this._state.squads[p.id] || {};
+      for (const team of Object.values(sq)) ownerMap[team] = p;
+    }
+    const champion = this._state.champion;
+
+    const ROUNDS = [
+      {key:'r32',  label:'ROUND OF 32', count:16},
+      {key:'r16',  label:'ROUND OF 16', count:8},
+      {key:'qf',   label:'QUARTER-FINALS', count:4},
+      {key:'sf',   label:'SEMI-FINALS', count:2},
+      {key:'final',label:'FINAL',       count:1},
+    ];
+
+    const MATCH_H = 62;  // px per match card
+    const GAP     = 6;   // px gap between matches in R32
+    const UNIT    = MATCH_H + GAP;  // 68px
+    const TOTAL_H = 16 * UNIT;      // 1088px
+
+    const makeTeamRow = (team, isWinner) => {
+      if (!team) return `<div class="bm-team"><span class="bm-flag">·</span><span class="bm-name" style="color:#2a4060;font-style:italic">TBD</span></div>`;
+      const owner = ownerMap[team];
+      const isChamp = team === champion;
+      let cls = 'bm-team';
+      if (isChamp) cls += ' champion-team';
+      else if (isWinner) cls += ' winner';
+      else if (owner) cls += ' my-team';
+      const ownerDot = owner ? `<span class="bm-owner" style="background:${owner.avatar_color}" title="${owner.name}"></span>` : '';
+      const wBadge = isChamp ? `<span class="bm-w-badge" style="background:var(--gold)">🏆</span>`
+                   : isWinner ? `<span class="bm-w-badge">W</span>` : '';
+      return `<div class="${cls}">${ownerDot}<span class="bm-flag">${FLAGS[team]||'🏳️'}</span><span class="bm-name">${team}</span>${wBadge}</div>`;
+    };
+
+    let html = '';
+    for (let ri = 0; ri < ROUNDS.length; ri++) {
+      const {key, label, count} = ROUNDS[ri];
+      const matches = bracket[key] || [];
+      const scale = Math.pow(2, ri);        // 1, 2, 4, 8, 16
+      const colH = TOTAL_H;
+      const slotH = (TOTAL_H / count);      // height per match slot
+      const offsetTop = (slotH - MATCH_H) / 2;  // center card in slot
+
+      // Column
+      html += `<div class="bracket-col" style="position:relative;height:${colH}px;min-width:152px;">`;
+      html += `<div class="bracket-col-header">${label}</div>`;
+
+      for (let i = 0; i < count; i++) {
+        const m = matches[i] || {home:'',away:'',winner:''};
+        const top = Math.round(i * slotH + offsetTop + 22); // +22 for header
+        const canEdit = this._hostVerified;
+        html += `<div class="bracket-match${m.winner?' has-winner':''}" style="top:${top}px;height:${MATCH_H}px" ${canEdit?`onclick="App.openBracketModal('${key}',${i})"`:''}>
+          <div class="bracket-match-inner">
+            ${makeTeamRow(m.home, m.winner && m.winner===m.home)}
+            <div class="bm-sep"></div>
+            ${makeTeamRow(m.away, m.winner && m.winner===m.away)}
+          </div>
+        </div>`;
+      }
+      html += `</div>`;
+
+      // Connector lines between rounds (skip after final)
+      if (ri < ROUNDS.length - 1) {
+        const nextCount = ROUNDS[ri+1].count;
+        const nextSlotH = TOTAL_H / nextCount;
+        html += `<div style="position:relative;width:16px;height:${colH}px;flex-shrink:0;">`;
+        for (let i = 0; i < count; i += 2) {
+          const topA = Math.round(i * slotH + offsetTop + MATCH_H/2 + 22);
+          const topB = Math.round((i+1) * slotH + offsetTop + MATCH_H/2 + 22);
+          const mid  = (topA + topB) / 2;
+          html += `<svg style="position:absolute;left:0;top:0;width:16px;height:${colH}px;overflow:visible" xmlns="http://www.w3.org/2000/svg">
+            <line x1="0" y1="${topA}" x2="8" y2="${topA}" stroke="#1e3040" stroke-width="1"/>
+            <line x1="0" y1="${topB}" x2="8" y2="${topB}" stroke="#1e3040" stroke-width="1"/>
+            <line x1="8" y1="${topA}" x2="8" y2="${topB}" stroke="#1e3040" stroke-width="1"/>
+            <line x1="8" y1="${mid}"  x2="16" y2="${mid}"  stroke="#1e3040" stroke-width="1"/>
+          </svg>`;
+        }
+        html += `</div>`;
+      }
+    }
+
+    root.innerHTML = html;
+  },
+
+  _bracketEdit: null,
+
+  openBracketModal(round, idx) {
+    if (!this._hostVerified) return;
+    const bracket = this._state.bracket;
+    const m = bracket?.[round]?.[idx] || {home:'',away:'',winner:''};
+    this._bracketEdit = {round, idx};
+
+    const ROUND_LABELS = {r32:'Round of 32',r16:'Round of 16',qf:'Quarterfinal',sf:'Semifinal',final:'Final'};
+    document.getElementById('bm-title').textContent = ROUND_LABELS[round] || round.toUpperCase();
+    document.getElementById('bm-subtitle').textContent = `Match ${idx+1} of ${bracket[round].length}`;
+    document.getElementById('bm-error').classList.add('hidden');
+
+    const teamOpts = '<option value="">— TBD —</option>' + TIERS_FLAT.map(t=>`<option value="${t}">${FLAGS[t]||''} ${t}</option>`).join('');
+    const homeEl = document.getElementById('bm-home');
+    const awayEl = document.getElementById('bm-away');
+    homeEl.innerHTML = teamOpts;
+    awayEl.innerHTML = teamOpts;
+    homeEl.value = m.home || '';
+    awayEl.value = m.away || '';
+
+    // Sync winner dropdown when teams change
+    const syncWinner = () => {
+      const h = homeEl.value, a = awayEl.value;
+      const w = document.getElementById('bm-winner');
+      w.innerHTML = '<option value="">— TBD —</option>' +
+        (h ? `<option value="${h}">${FLAGS[h]||''} ${h}</option>` : '') +
+        (a ? `<option value="${a}">${FLAGS[a]||''} ${a}</option>` : '');
+      w.value = m.winner && (m.winner===h||m.winner===a) ? m.winner : '';
+    };
+    homeEl.onchange = syncWinner;
+    awayEl.onchange = syncWinner;
+    syncWinner();
+
+    document.getElementById('bracket-modal').classList.remove('hidden');
+  },
+
+  closeBracketModal() {
+    document.getElementById('bracket-modal').classList.add('hidden');
+    this._bracketEdit = null;
+  },
+
+  async saveBracketMatch() {
+    if (!this._bracketEdit) return;
+    const {round, idx} = this._bracketEdit;
+    const home   = document.getElementById('bm-home').value;
+    const away   = document.getElementById('bm-away').value;
+    const winner = document.getElementById('bm-winner').value;
+    const errEl  = document.getElementById('bm-error');
+    if (winner && winner !== home && winner !== away) {
+      errEl.textContent = 'Winner must be one of the two teams'; errEl.classList.remove('hidden'); return;
+    }
+    try {
+      const r = await fetch(`${API}/api/set-match`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({password: this._hostPass||'', round, idx, home, away, winner})
+      });
+      if (!r.ok) { const b=await r.json(); errEl.textContent=b.detail||'Error'; errEl.classList.remove('hidden'); return; }
+      this.closeBracketModal();
+    } catch { errEl.textContent='Network error'; errEl.classList.remove('hidden'); }
   },
 
   copySquad() {
