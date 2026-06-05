@@ -1089,7 +1089,7 @@ const App = {
     const player=this._state.players.find(p=>p.id===pid);
     const squad=this._state.squads[pid];if(!squad){toast("No squad yet");return;}
     const score=squadScore(squad);const rating=squadRating(score);
-    const lines=[`⚽ ${player.name}'s World Cup 2026 Squad`,`📊 ${rating.label} (${score}/${MAX_SQUAD_SCORE})`,'', ...Object.entries(squad).map(([tier,team])=>`${TIER_META[tier].label}: ${FLAGS[team]||''} ${team}`),'','🌍 wc2026-draft-production.up.railway.app','#WC2026 #PrivateDraft'];
+    const lines=[`⚽ ${player.name}'s World Cup 2026 Squad`,`📊 ${rating.label} (${score}/${MAX_SQUAD_SCORE})`,'', ...Object.entries(squad).map(([tier,team])=>`${TIER_META[tier].label}: ${FLAGS[team]||''} ${team}`),'',`🌍 ${window.location.origin}`,'#WC2026 #PrivateDraft'];
     navigator.clipboard?.writeText(lines.join('\n')).then(()=>toast("📋 Squad copied to clipboard!")).catch(()=>toast(lines.join('\n')));
   },
 
