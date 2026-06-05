@@ -70,7 +70,7 @@ body,h1,h2,h3,p{margin:0;padding:0}
 }
 </style>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=Rajdhani:wght@400;600;700&display=swap');
 
     :root {
       --neon:   #00ff41;
@@ -80,9 +80,10 @@ body,h1,h2,h3,p{margin:0;padding:0}
       --bg:     #04080a;
       --panel:  #0b1418;
       --panel2: #111e24;
+      --body-font: 'Rajdhani', 'Trebuchet MS', sans-serif;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Rajdhani', 'Trebuchet MS', sans-serif; background: var(--bg); color: #e2e8f0; min-height: 100vh; overflow-x: hidden; }
+    body { font-family: var(--body-font); background: var(--bg); color: #e2e8f0; min-height: 100vh; overflow-x: hidden; }
     h1, h2, .bebas { font-family: 'Bebas Neue', Impact, 'Arial Narrow', sans-serif; letter-spacing: .05em; }
     #bgCanvas { position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: .35; }
     #confettiCanvas { position: fixed; inset: 0; pointer-events: none; z-index: 999; }
@@ -1188,6 +1189,62 @@ document.body.appendChild(sb);
       <div class="cd-unit"><span class="cd-num">${pad(s)}</span><span class="cd-label">Sec</span></div>`;
   }
   tick(); setInterval(tick,1000);
+})();
+
+/* ── Theme Switcher ── */
+const THEMES = [
+  {
+    name:'Cyber Draft',
+    neon:'#00ff41',gold:'#ffd700',blue:'#00d4ff',red:'#E61D25',
+    bg:'#04080a',panel:'#0b1418',panel2:'#111e24',
+    font:"'Rajdhani','Trebuchet MS',sans-serif",
+  },
+  {
+    name:'UCL Dark',
+    neon:'#3b82f6',gold:'#ffd700',blue:'#93c5fd',red:'#E61D25',
+    bg:'#020818',panel:'#060f2e',panel2:'#0d1a3f',
+    font:"'Inter','Rajdhani',sans-serif",
+  },
+  {
+    name:'Golden Hour',
+    neon:'#f59e0b',gold:'#ffd700',blue:'#fbbf24',red:'#ef4444',
+    bg:'#0a0600',panel:'#150c00',panel2:'#1f1200',
+    font:"'Rajdhani','Trebuchet MS',sans-serif",
+  },
+  {
+    name:'FIFA Official',
+    neon:'#E61D25',gold:'#ffd700',blue:'#ff6666',red:'#ff2244',
+    bg:'#0d0d0d',panel:'#1a1a1a',panel2:'#242424',
+    font:"'Rajdhani','Trebuchet MS',sans-serif",
+  },
+];
+let _themeIdx = parseInt(localStorage.getItem('wc_theme')||'0');
+function applyTheme(idx) {
+  _themeIdx = ((idx%THEMES.length)+THEMES.length)%THEMES.length;
+  localStorage.setItem('wc_theme',_themeIdx);
+  const t=THEMES[_themeIdx],r=document.documentElement.style;
+  r.setProperty('--neon',t.neon);r.setProperty('--gold',t.gold);
+  r.setProperty('--blue',t.blue);r.setProperty('--red',t.red);
+  r.setProperty('--bg',t.bg);r.setProperty('--panel',t.panel);
+  r.setProperty('--panel2',t.panel2);r.setProperty('--body-font',t.font);
+  document.body.style.background=t.bg;
+  if(_themLabel)_themLabel.textContent=t.name;
+}
+let _themLabel;
+(function(){
+  const wrap=document.createElement('div');
+  wrap.style.cssText='position:fixed;bottom:60px;left:16px;z-index:50;display:flex;flex-direction:column;align-items:center;gap:3px';
+  const btn=document.createElement('button');
+  btn.textContent='🎨';btn.title='Switch theme';
+  btn.style.cssText='background:#0a1a22;border:1px solid #1e3040;border-radius:50%;width:36px;height:36px;font-size:14px;cursor:pointer;color:#3a5a70;transition:color .2s,border-color .2s';
+  btn.onmouseenter=()=>{btn.style.color='var(--neon)';btn.style.borderColor='var(--neon)';};
+  btn.onmouseleave=()=>{btn.style.color='#3a5a70';btn.style.borderColor='#1e3040';};
+  btn.onclick=()=>applyTheme(_themeIdx+1);
+  _themLabel=document.createElement('div');
+  _themLabel.style.cssText='font-family:"Bebas Neue",Impact,sans-serif;font-size:.55rem;letter-spacing:.1em;color:#3a5a70;white-space:nowrap';
+  wrap.appendChild(btn);wrap.appendChild(_themLabel);
+  document.body.appendChild(wrap);
+  applyTheme(_themeIdx);
 })();
 
 /* ── Service Worker registration ── */
