@@ -318,6 +318,12 @@ body,h1,h2,h3,p{margin:0;padding:0}
     .scoreboard-fill { height:100%;background:linear-gradient(90deg,#004d14,var(--neon));border-radius:3px;transition:width .6s cubic-bezier(.2,.8,.4,1);box-shadow:0 0 10px var(--neon),0 0 20px rgba(0,255,65,.4);position:relative; }
     .scoreboard-fill::after { content:'';position:absolute;right:0;top:0;bottom:0;width:3px;background:rgba(255,255,255,.7);border-radius:2px; }
 
+    /* ── WC2026 Countdown ── */
+    .cd-unit { display:flex;flex-direction:column;align-items:center;gap:1px; }
+    .cd-num  { font-family:'Bebas Neue',Impact,sans-serif;font-size:1.6rem;line-height:1;color:var(--gold);text-shadow:0 0 12px rgba(255,215,0,.5); }
+    .cd-label{ font-size:.5rem;letter-spacing:.18em;color:#2a5030;text-transform:uppercase; }
+    .cd-sep  { font-family:'Bebas Neue',Impact,sans-serif;font-size:1.4rem;color:#1a3020;line-height:1;padding-bottom:10px; }
+
     /* ── ATMOSPHERE: Draw loading screen ── */
     @keyframes draw-spin { to{transform:rotate(360deg)} }
     @keyframes draw-pulse-text { 0%,100%{opacity:1}50%{opacity:.5} }
@@ -405,6 +411,8 @@ body,h1,h2,h3,p{margin:0;padding:0}
         <span class="host-sep">·</span>
         <span class="host-flag"><span class="hf-emoji">🇨🇦</span><span class="hf-name">Canada</span></span>
       </div>
+      <!-- WC 2026 countdown -->
+      <div id="wc-countdown" style="margin-top:10px;display:flex;gap:10px;justify-content:center;align-items:center"></div>
     </div>
     <div class="flex flex-col sm:flex-row gap-3 items-center justify-center" style="flex-shrink:0">
       <button id="btn-join" class="btn-battle pulse-neon" onclick="App.openRegisterModal()" onmouseenter="spawnParticles(this)">
@@ -455,6 +463,7 @@ body,h1,h2,h3,p{margin:0;padding:0}
     </div>
     <div class="flex items-center gap-3">
       <span class="text-sm" style="color:#7a9ab8">Playing as <span id="topbar-name" class="font-bold" style="color:var(--gold)"></span></span>
+      <button onclick="App.copyInviteLink()" style="font-size:.75rem;padding:.3rem .7rem;background:#00d4ff11;border:1px solid #00d4ff33;color:#00d4ff;border-radius:3px;cursor:pointer;font-family:'Bebas Neue',Impact,sans-serif;letter-spacing:.08em">🔗 INVITE</button>
       <button class="btn-red" onclick="App.logout()" style="font-size:.8rem;padding:.3rem .8rem">LOGOUT</button>
     </div>
   </div>
@@ -479,6 +488,15 @@ body,h1,h2,h3,p{margin:0;padding:0}
     <div class="mb-4 text-xs uppercase tracking-widest" style="color:#3a5a70">Registered Players</div>
     <div id="players-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
     <div id="empty-slots" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+
+    <!-- Squad Standings — visible post-draw -->
+    <div id="standings-section" class="hidden mt-8">
+      <div class="mb-3 flex items-center justify-between">
+        <div class="text-xs uppercase tracking-widest" style="color:#3a5a70">📊 Squad Standings</div>
+        <div class="text-xs" style="color:#2a4060">Based on FIFA team ratings within each tier</div>
+      </div>
+      <div id="standings-list" class="flex flex-col gap-2"></div>
+    </div>
   </div>
 </section>
 
@@ -486,7 +504,7 @@ body,h1,h2,h3,p{margin:0;padding:0}
 <section id="page-squad" class="page hidden">
   <div class="sticky top-0 z-10 px-4 py-3 flex items-center justify-between" style="background:linear-gradient(180deg,#050e12,transparent);border-bottom:1px solid #1e3040">
     <button class="btn-red" onclick="App.showDashboard()" style="font-size:.8rem;padding:.3rem .8rem">← BACK</button>
-    <span class="bebas text-xl" style="color:var(--gold)">MY SQUAD</span>
+    <span class="bebas text-xl" id="squad-page-title" style="color:var(--gold)">MY SQUAD</span>
     <button class="btn-neon" onclick="App.copySquad()" style="font-size:.8rem;padding:.3rem .8rem">📋 SHARE</button>
   </div>
   <div class="max-w-3xl mx-auto px-4 py-6">
@@ -494,6 +512,13 @@ body,h1,h2,h3,p{margin:0;padding:0}
       <div class="text-6xl mb-2" id="squad-initial"></div>
       <h2 class="text-4xl bebas glow-gold" style="color:var(--gold)" id="squad-player-name"></h2>
       <div class="text-sm mt-1" style="color:#5a8aaa">6 NATIONS · WORLD CUP 2026</div>
+      <div id="squad-score-badge" class="mt-3 hidden" style="display:inline-flex;flex-direction:column;align-items:center;gap:4px">
+        <div style="font-family:'Bebas Neue',Impact,sans-serif;font-size:.65rem;letter-spacing:.18em;color:#3a5a70">SQUAD RATING</div>
+        <div id="squad-score-bar-wrap" style="width:200px;height:6px;background:#1e3040;border-radius:3px;overflow:hidden">
+          <div id="squad-score-bar" style="height:100%;border-radius:3px;transition:width .8s cubic-bezier(.2,.8,.4,1)"></div>
+        </div>
+        <div id="squad-score-label" style="font-family:'Bebas Neue',Impact,sans-serif;font-size:.9rem;letter-spacing:.12em"></div>
+      </div>
     </div>
     <div class="pitch-bg p-6">
       <div class="text-center text-xs uppercase tracking-widest mb-6 flicker" style="color:var(--neon)44">⚽ YOUR NATIONS ⚽</div>
@@ -563,6 +588,29 @@ const FLAGS = {
   "Venezuela":"🇻🇪","Bolivia":"🇧🇴","Costa Rica":"🇨🇷","Panama":"🇵🇦","Canada":"🇨🇦","Jamaica":"🇯🇲",
   "Honduras":"🇭🇳","Saudi Arabia":"🇸🇦","Uzbekistan":"🇺🇿","Iraq":"🇮🇶","Qatar":"🇶🇦","New Zealand":"🇳🇿"
 };
+
+const TEAM_STRENGTH = {
+  "Brazil":100,"France":98,"England":96,"Argentina":95,"Spain":93,"Germany":91,"Portugal":89,"Belgium":86,
+  "Netherlands":84,"Italy":82,"Croatia":80,"Uruguay":78,"Denmark":76,"Mexico":74,"USA":72,"Japan":71,
+  "Colombia":70,"Morocco":68,"Senegal":66,"Switzerland":64,"Poland":62,"Sweden":60,"Serbia":58,"Iran":56,
+  "South Korea":55,"Australia":53,"Egypt":51,"Nigeria":49,"Cameroon":47,"Ghana":45,"Tunisia":43,"Algeria":41,
+  "Peru":40,"Chile":38,"Ecuador":36,"Paraguay":34,"Venezuela":32,"Bolivia":30,"Costa Rica":28,"Panama":26,
+  "Canada":25,"Jamaica":22,"Honduras":19,"Saudi Arabia":16,"Uzbekistan":13,"Iraq":12,"Qatar":11,"New Zealand":10,
+};
+const MAX_SQUAD_SCORE = 374; // 100+84+70+55+40+25 — getting the top team in every tier
+const MIN_SQUAD_SCORE = 290; // 86+71+56+41+26+10 — getting the weakest team in every tier
+
+function squadScore(squad) {
+  return Object.values(squad).reduce((s,t)=>s+(TEAM_STRENGTH[t]||0),0);
+}
+function squadRating(score) {
+  const pct = (score - MIN_SQUAD_SCORE) / (MAX_SQUAD_SCORE - MIN_SQUAD_SCORE);
+  if(pct>=0.88) return {label:'LEGENDARY DRAW', color:'var(--gold)'};
+  if(pct>=0.70) return {label:'ELITE DRAW',     color:'var(--blue)'};
+  if(pct>=0.50) return {label:'STRONG DRAW',    color:'var(--neon)'};
+  if(pct>=0.30) return {label:'SOLID DRAW',     color:'#ff8800'};
+  return             {label:'UNDERDOG BUILD',   color:'#cc44ff'};
+}
 
 const RIVALRY_LINES = [
   "{a} vs {b}: 🔥 This one's personal. One of them is going home early.",
@@ -750,7 +798,7 @@ const App = {
   onStateUpdate(type) {
     const n = this._state.count;
     document.getElementById('landing-counter').textContent=`${n} / 8`;
-    for(let i=0;i<8;i++){const s=document.getElementById('slot-'+i);if(s){s.className='player-slot'+(i<n?' filled':'');s.textContent=i<n?'✓':'·';}}
+    for(let i=0;i<8;i++){const s=document.getElementById('slot-'+i);if(s){const p=this._state.players[i];s.className='player-slot'+(i<n?' filled':'');s.textContent=i<n?(p?.avatar_initial||'✓'):'·';if(p&&i<n)s.style.color=p.avatar_color;else s.style.color='';}}
     document.getElementById('landing-progress').style.width=`${(n/8)*100}%`;
     const joinBtn=document.getElementById('btn-join');
     if(joinBtn){
@@ -942,6 +990,8 @@ const App = {
           </div>`).join('')}</div>`;
       }
 
+      const score = squad&&draw_done ? squadScore(squad) : null;
+      const rating = score !== null ? squadRating(score) : null;
       card.innerHTML=`
         ${draw_done?'<div class="locked-stamp stamp-anim">LOCKED IN</div>':''}
         <div class="flex items-center gap-3">
@@ -949,6 +999,7 @@ const App = {
           <div class="flex-1 min-w-0">
             <div class="font-bold text-base truncate" style="color:${isMe?'var(--neon)':'#e2e8f0'}">${p.name}${isMe?' <span style="font-size:.7rem;color:var(--neon)44">(YOU)</span>':''}</div>
             ${(isMe||this._hostVerified)?`<div class="text-xs" style="color:#3a5a70">${p.email}</div>`:''}
+            ${rating?`<div style="font-family:'Bebas Neue',Impact,sans-serif;font-size:.7rem;letter-spacing:.08em;color:${rating.color};margin-top:2px">${rating.label} · ${score}/${MAX_SQUAD_SCORE}</div>`:''}
           </div>
           <div class="text-xs px-2 py-1 rounded" style="background:#00ff4122;color:var(--neon);border:1px solid var(--neon)22">REGISTERED</div>
         </div>
@@ -964,11 +1015,55 @@ const App = {
       s.innerHTML=`<div class="avatar" style="border-color:#2a4060;color:#2a4060;border-style:dashed">?</div><div><div class="font-bold text-sm" style="color:#2a4060">AWAITING PLAYER</div><div class="text-xs" style="color:#1e3040">Slot ${count+i+1} of 8</div></div>`;
       slots.appendChild(s);
     }
+
+    // Standings
+    const standingsSection=document.getElementById('standings-section');
+    const standingsList=document.getElementById('standings-list');
+    if(draw_done && players.length > 0){
+      standingsSection.classList.remove('hidden');
+      const ranked=[...players].map(p=>({p, score:squadScore(squads[p.id]||{})})).sort((a,b)=>b.score-a.score);
+      const medals=['🥇','🥈','🥉'];
+      standingsList.innerHTML=ranked.map(({p,score},i)=>{
+        const isMe=cp&&p.id===cp.id;
+        const rating=squadRating(score);
+        const pct=Math.round(((score-MIN_SQUAD_SCORE)/(MAX_SQUAD_SCORE-MIN_SQUAD_SCORE))*100);
+        return `<div class="panel p-3 flex items-center gap-3 reveal-up" style="animation-delay:${i*.05}s;opacity:0;${isMe?'border:1px solid var(--neon)44':''}">
+          <div style="font-family:'Bebas Neue',Impact,sans-serif;font-size:1.1rem;color:#3a5a70;width:20px;text-align:center;flex-shrink:0">${medals[i]||`#${i+1}`}</div>
+          <div class="avatar" style="width:32px;height:32px;font-size:.9rem;background:${p.avatar_color}22;border-color:${p.avatar_color};color:${p.avatar_color}">${p.avatar_initial}</div>
+          <div class="flex-1 min-w-0">
+            <div class="font-bold text-sm truncate" style="color:${isMe?'var(--neon)':'#e2e8f0'}">${p.name}${isMe?' <span style="font-size:.6rem;color:var(--neon)44">(YOU)</span>':''}</div>
+            <div style="height:4px;background:#0a1418;border-radius:2px;overflow:hidden;margin-top:4px;width:100%">
+              <div style="height:100%;width:${pct}%;background:${rating.color};border-radius:2px;transition:width .8s cubic-bezier(.2,.8,.4,1);box-shadow:0 0 6px ${rating.color}88"></div>
+            </div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-family:'Bebas Neue',Impact,sans-serif;font-size:1rem;color:${rating.color}">${score}</div>
+            <div style="font-size:.6rem;color:#2a4060;letter-spacing:.1em;text-transform:uppercase">${rating.label}</div>
+          </div>
+          <button onclick="App.showSquad('${p.id}')" style="font-size:.65rem;padding:3px 7px;background:transparent;border:1px solid #2a4060;color:#3a5a70;cursor:pointer;border-radius:2px;font-family:'Bebas Neue',Impact,sans-serif;flex-shrink:0">VIEW</button>
+        </div>`;
+      }).join('');
+    } else {
+      standingsSection.classList.add('hidden');
+    }
   },
 
   renderSquad(player, squad) {
+    const isMySquad = player.id === this.currentPlayer?.id;
+    document.getElementById('squad-page-title').textContent = isMySquad ? 'MY SQUAD' : `${player.name.toUpperCase()}'S SQUAD`;
     document.getElementById('squad-player-name').textContent=player.name;
     document.getElementById('squad-initial').textContent=player.avatar_initial;
+    // Squad score badge
+    const score=squadScore(squad);
+    const rating=squadRating(score);
+    const pct=Math.round(((score-MIN_SQUAD_SCORE)/(MAX_SQUAD_SCORE-MIN_SQUAD_SCORE))*100);
+    const badge=document.getElementById('squad-score-badge');
+    badge.style.display='inline-flex';badge.classList.remove('hidden');
+    const bar=document.getElementById('squad-score-bar');
+    bar.style.width='0%';bar.style.background=rating.color;bar.style.boxShadow=`0 0 8px ${rating.color}`;
+    setTimeout(()=>bar.style.width=`${pct}%`,100);
+    document.getElementById('squad-score-label').style.color=rating.color;
+    document.getElementById('squad-score-label').textContent=`${rating.label} · ${score} / ${MAX_SQUAD_SCORE}`;
     document.getElementById('squad-cards').innerHTML=Object.entries(squad).map(([tier,team],idx)=>{
       const meta=TIER_META[tier];
       return `<div class="team-card panel p-3 text-center relative reveal-up" style="animation-delay:${idx*.1}s;opacity:0;border-top:3px solid ${meta.color}">
@@ -990,10 +1085,17 @@ const App = {
   },
 
   copySquad() {
-    const cp=this.currentPlayer;if(!cp)return;
-    const squad=this._state.squads[cp.id];if(!squad){toast("No squad yet");return;}
-    const lines=[`⚽ ${cp.name}'s World Cup 2026 Squad`,'',...Object.entries(squad).map(([tier,team])=>`${TIER_META[tier].label}: ${FLAGS[team]||''} ${team}`),'','#WC2026 #PrivateDraft'];
-    navigator.clipboard?.writeText(lines.join('\n')).then(()=>toast("📋 Squad copied!")).catch(()=>toast(lines.join('\n')));
+    const pid=this._squadViewId||this.currentPlayer?.id;if(!pid)return;
+    const player=this._state.players.find(p=>p.id===pid);
+    const squad=this._state.squads[pid];if(!squad){toast("No squad yet");return;}
+    const score=squadScore(squad);const rating=squadRating(score);
+    const lines=[`⚽ ${player.name}'s World Cup 2026 Squad`,`📊 ${rating.label} (${score}/${MAX_SQUAD_SCORE})`,'', ...Object.entries(squad).map(([tier,team])=>`${TIER_META[tier].label}: ${FLAGS[team]||''} ${team}`),'','🌍 wc2026-draft-production.up.railway.app','#WC2026 #PrivateDraft'];
+    navigator.clipboard?.writeText(lines.join('\n')).then(()=>toast("📋 Squad copied to clipboard!")).catch(()=>toast(lines.join('\n')));
+  },
+
+  copyInviteLink() {
+    const url=window.location.origin;
+    navigator.clipboard?.writeText(url).then(()=>toast(`🔗 Link copied! Share: ${url}`)).catch(()=>toast(`Share this link: ${url}`));
   },
 };
 
@@ -1062,6 +1164,31 @@ sb.onclick=()=>{
   sb.style.borderColor=soundEnabled?'var(--neon)':'#1e3040';
 };
 document.body.appendChild(sb);
+
+/* ── WC2026 Countdown ── */
+(function(){
+  const WC_START = new Date(Date.UTC(2026,5,11,23,0,0)); // June 11, 2026 23:00 UTC (opening kickoff)
+  const el = document.getElementById('wc-countdown');
+  if(!el) return;
+  function pad(n){return String(n).padStart(2,'0');}
+  function tick(){
+    const diff = WC_START - Date.now();
+    if(diff <= 0){
+      el.innerHTML='<span style="font-family:\'Bebas Neue\',Impact,sans-serif;font-size:.85rem;letter-spacing:.15em;color:var(--gold)">⚽ WORLD CUP 2026 IS LIVE</span>';
+      return;
+    }
+    const d=Math.floor(diff/86400000),h=Math.floor((diff%86400000)/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000);
+    el.innerHTML=`
+      <div class="cd-unit"><span class="cd-num">${d}</span><span class="cd-label">Days</span></div>
+      <span class="cd-sep">:</span>
+      <div class="cd-unit"><span class="cd-num">${pad(h)}</span><span class="cd-label">Hrs</span></div>
+      <span class="cd-sep">:</span>
+      <div class="cd-unit"><span class="cd-num">${pad(m)}</span><span class="cd-label">Min</span></div>
+      <span class="cd-sep">:</span>
+      <div class="cd-unit"><span class="cd-num">${pad(s)}</span><span class="cd-label">Sec</span></div>`;
+  }
+  tick(); setInterval(tick,1000);
+})();
 
 /* ── Service Worker registration ── */
 if ('serviceWorker' in navigator) {
