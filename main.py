@@ -95,12 +95,15 @@ def db_get_players():
 
 def db_add_player(player):
     with get_db() as conn:
-        conn.execute(
-            "INSERT INTO players (id,name,email,avatar_color,avatar_initial,registered_at) VALUES (?,?,?,?,?,?)",
-            (player["id"], player["name"], player["email"],
-             player["avatar_color"], player["avatar_initial"], player["registered_at"])
-        )
-        conn.commit()
+        try:
+            conn.execute(
+                "INSERT INTO players (id,name,email,avatar_color,avatar_initial,registered_at) VALUES (?,?,?,?,?,?)",
+                (player["id"], player["name"], player["email"],
+                 player["avatar_color"], player["avatar_initial"], player["registered_at"])
+            )
+            conn.commit()
+        except sqlite3.IntegrityError:
+            raise HTTPException(409, "Email already registered")
 
 def db_get_squads():
     with get_db() as conn:
