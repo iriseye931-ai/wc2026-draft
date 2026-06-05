@@ -4,7 +4,9 @@ FastAPI + WebSocket, in-memory state (SQLite fallback on Railway).
 Serves the frontend HTML and handles all tournament logic.
 """
 
+import asyncio
 import json
+import logging
 import os
 import random
 import sqlite3
@@ -13,11 +15,14 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
 
+import httpx
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+
+log = logging.getLogger("wc2026")
 
 # ---------------------------------------------------------------------------
 # Config
@@ -30,6 +35,8 @@ if not HOST_PASSWORD:
     HOST_PASSWORD = "admin2026"
 DB_PATH = os.getenv("DB_PATH", "tournament.db")
 PORT = int(os.getenv("PORT", "8000"))
+FD_API_KEY = os.getenv("FOOTBALL_DATA_API_KEY", "")
+POLL_INTERVAL = int(os.getenv("BRACKET_POLL_SECONDS", "180"))  # 3 min default
 
 # ---------------------------------------------------------------------------
 # Tier data
@@ -217,10 +224,141 @@ ws_manager = WSManager()
 # App
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# Live bracket polling — football-data.org
+# ---------------------------------------------------------------------------
+
+# football-data.org team name → our internal name
+_FD_TEAM = {
+    "Korea Republic":       "South Korea",
+    "United States":        "USA",
+    "IR Iran":              "Iran",
+    "Côte d'Ivoire":        "Ivory Coast",
+    "Bosnia and Herzegovina": "Bosnia",
+    "China PR":             "China",
+    "Trinidad and Tobago":  "Trinidad & Tobago",
+}
+
+# football-data.org stage → our bracket round key
+_FD_STAGE = {
+    "LAST_32":       "r32",
+    "LAST_16":       "r16",
+    "QUARTER_FINALS":"qf",
+    "SEMI_FINALS":   "sf",
+    "FINAL":         "final",
+}
+
+def _fd_name(raw: str) -> str:
+    return _FD_TEAM.get(raw, raw)
+
+async def _fetch_wc_matches() -> list:
+    url = "https://api.football-data.org/v4/competitions/WC/matches"
+    async with httpx.AsyncClient(timeout=12) as client:
+        r = await client.get(url, headers={"X-Auth-Token": FD_API_KEY})
+        r.raise_for_status()
+        return r.json().get("matches", [])
+
+async def _apply_fd_matches(matches: list) -> bool:
+    """Update bracket from football-data.org match list. Returns True if anything changed."""
+    if not db_is_draw_done():
+        return False
+
+    bracket = db_get_bracket()
+    changed = False
+
+    for m in matches:
+        stage = m.get("stage", "")
+        rk = _FD_STAGE.get(stage)
+        if not rk:
+            continue
+
+        status    = m.get("status", "")
+        home_raw  = (m.get("homeTeam") or {}).get("name", "")
+        away_raw  = (m.get("awayTeam") or {}).get("name", "")
+        home      = _fd_name(home_raw)
+        away      = _fd_name(away_raw)
+
+        # Skip if both teams still TBD (match not yet seeded)
+        if not home or not away or home == "TBD" or away == "TBD":
+            continue
+
+        round_matches = bracket[rk]
+
+        # Find existing slot for this fixture, or claim the next empty one
+        slot_idx = None
+        for i, slot in enumerate(round_matches):
+            if slot["home"] == home and slot["away"] == away:
+                slot_idx = i
+                break
+        if slot_idx is None:
+            # Claim next empty slot (preserve any host-assigned ones)
+            for i, slot in enumerate(round_matches):
+                if not slot["home"] and not slot["away"]:
+                    slot_idx = i
+                    break
+        if slot_idx is None:
+            continue
+
+        slot = bracket[rk][slot_idx]
+        old  = (slot["home"], slot["away"], slot["winner"])
+
+        slot["home"] = home
+        slot["away"] = away
+
+        if status == "FINISHED":
+            fd_winner = (m.get("score") or {}).get("winner")
+            if fd_winner == "HOME_TEAM":
+                slot["winner"] = home
+            elif fd_winner == "AWAY_TEAM":
+                slot["winner"] = away
+            # DRAW can happen in group stage; in knockout it means penalties —
+            # football-data.org sets winner correctly after extra time / penalties
+
+        if (slot["home"], slot["away"], slot["winner"]) != old:
+            changed = True
+            if slot["winner"]:
+                key = (rk, slot_idx)
+                if key in _ADVANCE:
+                    nxt_r, nxt_i, side = _ADVANCE[key]
+                    bracket[nxt_r][nxt_i][side] = slot["winner"]
+
+    if changed:
+        db_save_bracket(bracket)
+        f1 = bracket["sf"][0].get("winner", "")
+        f2 = bracket["sf"][1].get("winner", "")
+        if f1 and f2:
+            db_set_finals(f1, f2)
+        champ = bracket["final"][0].get("winner", "")
+        if champ:
+            db_set_champion(champ)
+
+    return changed
+
+async def _poll_loop():
+    log.info("Bracket polling started (interval=%ds)", POLL_INTERVAL)
+    while True:
+        await asyncio.sleep(POLL_INTERVAL)
+        try:
+            matches  = await _fetch_wc_matches()
+            changed  = await _apply_fd_matches(matches)
+            if changed:
+                state = full_state()
+                await ws_manager.broadcast({"type": "bracket_update", **state})
+                log.info("Bracket auto-updated from live data")
+        except Exception as exc:
+            log.warning("Bracket poll failed: %s", exc)
+
+# ---------------------------------------------------------------------------
+# App lifespan
+# ---------------------------------------------------------------------------
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    poll_task = asyncio.create_task(_poll_loop()) if FD_API_KEY else None
     yield
+    if poll_task:
+        poll_task.cancel()
 
 app = FastAPI(title="WC2026 Draft", lifespan=lifespan)
 
@@ -444,10 +582,34 @@ def api_verify_host(req: HostRequest):
     return {"ok": True}
 
 
+@app.post("/api/sync-bracket")
+async def api_sync_bracket(req: HostRequest):
+    """Force an immediate poll from football-data.org (host only)."""
+    if req.password != HOST_PASSWORD:
+        raise HTTPException(403, "Wrong password")
+    if not FD_API_KEY:
+        raise HTTPException(503, "FOOTBALL_DATA_API_KEY not configured")
+    try:
+        matches = await _fetch_wc_matches()
+        changed = await _apply_fd_matches(matches)
+        if changed:
+            state = full_state()
+            await ws_manager.broadcast({"type": "bracket_update", **state})
+        return {"ok": True, "changed": changed, "matches_fetched": len(matches)}
+    except httpx.HTTPError as e:
+        raise HTTPException(502, f"football-data.org error: {e}")
+
+
 @app.get("/api/health")
 def api_health():
     players = db_get_players()
-    return {"ok": True, "players": len(players), "draw_done": db_is_draw_done()}
+    return {
+        "ok": True,
+        "players": len(players),
+        "draw_done": db_is_draw_done(),
+        "live_sync": bool(FD_API_KEY),
+        "poll_interval_s": POLL_INTERVAL if FD_API_KEY else None,
+    }
 
 # ---------------------------------------------------------------------------
 # WebSocket

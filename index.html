@@ -604,7 +604,11 @@ body,h1,h2,h3,p{margin:0;padding:0}
   <div class="sticky top-0 z-10 px-4 py-3 flex items-center justify-between" style="background:linear-gradient(180deg,#050e12,transparent);border-bottom:1px solid #1e3040">
     <button class="btn-red" onclick="App.showDashboard()" style="font-size:.8rem;padding:.3rem .8rem">← BACK</button>
     <span class="bebas text-xl" style="color:var(--gold)">🏟️ WC 2026 BRACKET</span>
-    <span style="font-size:.7rem;color:#3a5a70;font-family:monospace">TAP MATCH TO EDIT</span>
+    <div style="display:flex;align-items:center;gap:6px">
+      <span id="bracket-live-dot" class="hidden" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--neon);box-shadow:0 0 6px var(--neon)"></span>
+      <span id="bracket-live-label" class="hidden" style="font-size:.65rem;color:var(--neon);font-family:monospace;letter-spacing:.08em">LIVE</span>
+      <button id="bracket-sync-btn" class="hidden" onclick="App.syncBracket()" style="font-size:.65rem;padding:2px 8px;background:transparent;border:1px solid var(--neon)44;color:var(--neon);border-radius:3px;cursor:pointer;font-family:monospace">↻ SYNC</button>
+    </div>
   </div>
   <div class="max-w-full px-2 py-4">
     <div class="bracket-wrap">
@@ -856,13 +860,20 @@ const App = {
   get currentPlayer() { try{return JSON.parse(sessionStorage.getItem('wc_player')||'null');}catch{return null;} },
   set currentPlayer(p) { p ? sessionStorage.setItem('wc_player',JSON.stringify(p)) : sessionStorage.removeItem('wc_player'); },
 
+  _liveSync: false,
+
   async init() {
-    // Restore host session across refreshes
     if (sessionStorage.getItem('wc_host_verified') === '1') {
       this._hostVerified = true;
       this._hostPass = sessionStorage.getItem('wc_host_pass') || '';
     }
     this.connectWS();
+    // Check if live sync is enabled on this server
+    try {
+      const h = await fetch(`${API}/api/health`);
+      const d = await h.json();
+      this._liveSync = !!d.live_sync;
+    } catch {}
     const cp = this.currentPlayer;
     if (cp) { this.showDashboard(); return; }
     this.showPage('page-landing');
@@ -931,7 +942,7 @@ const App = {
       Confetti.burst();
     }
     if (type === 'bracket_update') {
-      toast('📊 Bracket updated!', 3000);
+      toast(this._liveSync ? '📡 Bracket updated from live data!' : '📊 Bracket updated!', 3500);
     }
     if (type === 'finals_set') {
       toast(`🏟️ THE FINAL IS SET: ${this._state.finalist_1} vs ${this._state.finalist_2}`, 7000);
@@ -1322,7 +1333,30 @@ const App = {
 
   // ── Bracket ──────────────────────────────────────────────────────────
 
+  async syncBracket() {
+    const btn = document.getElementById('bracket-sync-btn');
+    if (btn) { btn.textContent = '↻ SYNCING…'; btn.disabled = true; }
+    try {
+      const r = await fetch(`${API}/api/sync-bracket`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({password: this._hostPass||''})
+      });
+      const d = await r.json();
+      if (!r.ok) { toast(`❌ ${d.detail}`); }
+      else { toast(d.changed ? `✅ Bracket synced — ${d.matches_fetched} matches` : '⏸ No new results yet', 4000); }
+    } catch { toast('❌ Sync failed'); }
+    finally { if (btn) { btn.textContent = '↻ SYNC'; btn.disabled = false; } }
+  },
+
   renderBracket() {
+    // Live sync indicator
+    ['bracket-live-dot','bracket-live-label'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el){el.style.display=this._liveSync?'inline-block':'none';}
+    });
+    const syncBtn = document.getElementById('bracket-sync-btn');
+    if (syncBtn) syncBtn.style.display = (this._liveSync && this._hostVerified) ? 'inline-block' : 'none';
+
     const bracket = this._state.bracket;
     const root = document.getElementById('bracket-root');
     if (!bracket || !this._state.draw_done) {
