@@ -407,7 +407,7 @@ body,h1,h2,h3,p{margin:0;padding:0}
       </div>
     </div>
     <div class="flex flex-col sm:flex-row gap-3 items-center justify-center" style="flex-shrink:0">
-      <button class="btn-battle pulse-neon" onclick="App.openRegisterModal()" onmouseenter="spawnParticles(this)">
+      <button id="btn-join" class="btn-battle pulse-neon" onclick="App.openRegisterModal()" onmouseenter="spawnParticles(this)">
         <span class="btn-inner"><span>⚡</span><span class="ball-roll">⚽</span> JOIN THE BATTLE</span>
       </button>
       <button class="btn-host" onclick="App.openHostModal()"><span class="lock-icon">🔐</span> HOST LOGIN</button>
@@ -694,11 +694,17 @@ const App = {
   _wsRetry: 1000,
   _hostVerified: false,
   _squadViewId: null,
+  _rivalryCache: {},
 
   get currentPlayer() { try{return JSON.parse(sessionStorage.getItem('wc_player')||'null');}catch{return null;} },
   set currentPlayer(p) { p ? sessionStorage.setItem('wc_player',JSON.stringify(p)) : sessionStorage.removeItem('wc_player'); },
 
   async init() {
+    // Restore host session across refreshes
+    if (sessionStorage.getItem('wc_host_verified') === '1') {
+      this._hostVerified = true;
+      this._hostPass = sessionStorage.getItem('wc_host_pass') || '';
+    }
     this.connectWS();
     const cp = this.currentPlayer;
     if (cp) { this.showDashboard(); return; }
@@ -746,6 +752,13 @@ const App = {
     document.getElementById('landing-counter').textContent=`${n} / 8`;
     for(let i=0;i<8;i++){const s=document.getElementById('slot-'+i);if(s){s.className='player-slot'+(i<n?' filled':'');s.textContent=i<n?'✓':'·';}}
     document.getElementById('landing-progress').style.width=`${(n/8)*100}%`;
+    const joinBtn=document.getElementById('btn-join');
+    if(joinBtn){
+      const full=n>=8||this._state.draw_done;
+      joinBtn.disabled=full;
+      const inner=joinBtn.querySelector('.btn-inner');
+      if(inner)inner.innerHTML=full?'<span>🔒</span> SQUAD FULL':'<span>⚡</span><span class="ball-roll">⚽</span> JOIN THE BATTLE';
+    }
     if (!document.getElementById('page-dashboard').classList.contains('hidden')) this.renderDashboard();
     if (!document.getElementById('page-squad').classList.contains('hidden') && this._squadViewId) {
       const player = this._state.players.find(p=>p.id===this._squadViewId);
@@ -813,7 +826,14 @@ const App = {
     } catch{err.textContent='❌ Server error';err.classList.remove('hidden');}
     finally{if(btn){btn.disabled=false;btn.textContent='🔑 ALREADY REGISTERED';}}
   },
-  logout() { this.currentPlayer=null; this._hostVerified=false; this.showPage('page-landing'); },
+  logout() {
+    this.currentPlayer=null;
+    this._hostVerified=false;
+    this._hostPass='';
+    sessionStorage.removeItem('wc_host_verified');
+    sessionStorage.removeItem('wc_host_pass');
+    this.showPage('page-landing');
+  },
 
   async verifyHost() {
     const pass=document.getElementById('host-pass').value;
@@ -825,6 +845,8 @@ const App = {
       if(!r.ok){toast("❌ Wrong password");return;}
       this._hostPass=pass;
       this._hostVerified=true;
+      sessionStorage.setItem('wc_host_verified','1');
+      sessionStorage.setItem('wc_host_pass',pass);
       this.closeModal('modal-host');
       toast("🔐 Host access granted");
       if(document.getElementById('page-dashboard').classList.contains('hidden')) this.showDashboard();
@@ -836,14 +858,19 @@ const App = {
     }
   },
   async resetTournament() {
-    const pass=document.getElementById('host-pass').value;
+    const pass=this._hostPass||document.getElementById('host-pass').value;
+    if(!pass){toast("❌ Verify host password first");return;}
     if(!confirm('⚠️ RESET the entire tournament?\nAll players and squads will be deleted.'))return;
     try {
       const r=await fetch(`${API}/api/reset`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pass})});
       if(!r.ok){const b=await r.json();toast(`❌ ${b.detail}`);return;}
       this.closeModal('modal-host');
       this._hostVerified=false;
+      this._hostPass='';
+      sessionStorage.removeItem('wc_host_verified');
+      sessionStorage.removeItem('wc_host_pass');
       this.currentPlayer=null;
+      this._rivalryCache={};
       toast("🔄 Tournament reset");
       this.showPage('page-landing');
     } catch{toast("❌ Reset failed");}
@@ -921,7 +948,7 @@ const App = {
           <div class="avatar" style="background:${p.avatar_color}22;border-color:${p.avatar_color};color:${p.avatar_color}">${p.avatar_initial}</div>
           <div class="flex-1 min-w-0">
             <div class="font-bold text-base truncate" style="color:${isMe?'var(--neon)':'#e2e8f0'}">${p.name}${isMe?' <span style="font-size:.7rem;color:var(--neon)44">(YOU)</span>':''}</div>
-            <div class="text-xs" style="color:#3a5a70">${p.email}</div>
+            ${(isMe||this._hostVerified)?`<div class="text-xs" style="color:#3a5a70">${p.email}</div>`:''}
           </div>
           <div class="text-xs px-2 py-1 rounded" style="background:#00ff4122;color:var(--neon);border:1px solid var(--neon)22">REGISTERED</div>
         </div>
@@ -952,11 +979,14 @@ const App = {
       </div>`;
     }).join('');
 
-    const others=this._state.players.filter(p=>p.id!==player.id).slice(0,4);
-    document.getElementById('rivalry-list').innerHTML=others.map(o=>{
-      const line=RIVALRY_LINES[Math.floor(Math.random()*RIVALRY_LINES.length)];
-      return `<div class="text-sm py-1" style="color:#5a8aaa;border-bottom:1px solid #1e3040">${line.replace('{a}',player.name).replace('{b}',o.name)}</div>`;
-    }).join('');
+    if(!this._rivalryCache[player.id]){
+      const others=this._state.players.filter(p=>p.id!==player.id).slice(0,4);
+      this._rivalryCache[player.id]=others.map(o=>{
+        const line=RIVALRY_LINES[Math.floor(Math.random()*RIVALRY_LINES.length)];
+        return line.replace('{a}',player.name).replace('{b}',o.name);
+      });
+    }
+    document.getElementById('rivalry-list').innerHTML=this._rivalryCache[player.id].map(line=>`<div class="text-sm py-1" style="color:#5a8aaa;border-bottom:1px solid #1e3040">${line}</div>`).join('');
   },
 
   copySquad() {

@@ -23,7 +23,11 @@ from pydantic import BaseModel
 # Config
 # ---------------------------------------------------------------------------
 
-HOST_PASSWORD = os.getenv("HOST_PASSWORD", "admin2026")
+HOST_PASSWORD = os.getenv("HOST_PASSWORD", "")
+if not HOST_PASSWORD:
+    import warnings
+    warnings.warn("HOST_PASSWORD env var not set — using insecure default. Set it on Railway.", stacklevel=1)
+    HOST_PASSWORD = "admin2026"
 DB_PATH = os.getenv("DB_PATH", "tournament.db")
 PORT = int(os.getenv("PORT", "8000"))
 
