@@ -429,7 +429,7 @@ body,h1,h2,h3,p{margin:0;padding:0}
     </div>
     <div style="flex-shrink:0">
       <div id="landing-meta" class="text-sm tracking-widest uppercase" style="color:var(--blue);margin-bottom:4px">⚡ Private Tournament · 12 Players · Fair Draw</div>
-      <h1 class="hero-title bebas" style="font-size:clamp(2.2rem,7vw,7rem)">WORLD CUP<br>2026<br><span class="draft-glow" style="font-size:60%">PRIVATE DRAFT</span></h1>
+      <h1 class="hero-title bebas" style="font-size:clamp(2.2rem,7vw,7rem)">WORLD CUP<br>2026<br><span id="landing-draft-label" class="draft-glow" style="font-size:60%">PRIVATE DRAFT</span></h1>
     </div>
     <div style="flex-shrink:0">
       <p class="text-base max-w-md mx-auto" style="color:#7a9ab8">48 nations. 4 tiers. One champion. Every squad decided by fate.</p>
@@ -986,16 +986,19 @@ const App = {
     const joinBtn=document.getElementById('btn-join');
     const loginBtn=document.getElementById('btn-login-existing');
     const metaEl=document.getElementById('landing-meta');
+    const draftLabel=document.getElementById('landing-draft-label');
     const drawDone=this._state.draw_done;
     if(joinBtn){
       const full=n>=12||drawDone;
       if(drawDone){
-        // After draw: hide SQUAD FULL button and meta tagline entirely
+        // After draw: hide SQUAD FULL button, meta tagline, and PRIVATE DRAFT label
         joinBtn.style.display='none';
         if(metaEl) metaEl.style.display='none';
+        if(draftLabel) draftLabel.style.display='none';
       } else {
         joinBtn.style.display='';
         if(metaEl) metaEl.style.display='';
+        if(draftLabel) draftLabel.style.display='';
         joinBtn.disabled=full;
         const inner=joinBtn.querySelector('.btn-inner');
         if(inner)inner.innerHTML=full?'<span>🔒</span> SQUAD FULL':'<span>⚡</span><span class="ball-roll">⚽</span> JOIN THE BATTLE';
