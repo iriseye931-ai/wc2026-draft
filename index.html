@@ -428,7 +428,7 @@ body,h1,h2,h3,p{margin:0;padding:0}
       </svg>
     </div>
     <div style="flex-shrink:0">
-      <div class="text-sm tracking-widest uppercase" style="color:var(--blue);margin-bottom:4px">⚡ Private Tournament · 12 Players · Fair Draw</div>
+      <div id="landing-meta" class="text-sm tracking-widest uppercase" style="color:var(--blue);margin-bottom:4px">⚡ Private Tournament · 12 Players · Fair Draw</div>
       <h1 class="hero-title bebas" style="font-size:clamp(2.2rem,7vw,7rem)">WORLD CUP<br>2026<br><span class="draft-glow" style="font-size:60%">PRIVATE DRAFT</span></h1>
     </div>
     <div style="flex-shrink:0">
@@ -985,12 +985,22 @@ const App = {
     document.getElementById('landing-progress').style.width=`${(n/12)*100}%`;
     const joinBtn=document.getElementById('btn-join');
     const loginBtn=document.getElementById('btn-login-existing');
+    const metaEl=document.getElementById('landing-meta');
+    const drawDone=this._state.draw_done;
     if(joinBtn){
-      const full=n>=12||this._state.draw_done;
-      joinBtn.disabled=full;
-      const inner=joinBtn.querySelector('.btn-inner');
-      if(inner)inner.innerHTML=full?'<span>🔒</span> SQUAD FULL':'<span>⚡</span><span class="ball-roll">⚽</span> JOIN THE BATTLE';
-      if(loginBtn) loginBtn.style.display = full ? 'inline-flex' : 'none';
+      const full=n>=12||drawDone;
+      if(drawDone){
+        // After draw: hide SQUAD FULL button and meta tagline entirely
+        joinBtn.style.display='none';
+        if(metaEl) metaEl.style.display='none';
+      } else {
+        joinBtn.style.display='';
+        if(metaEl) metaEl.style.display='';
+        joinBtn.disabled=full;
+        const inner=joinBtn.querySelector('.btn-inner');
+        if(inner)inner.innerHTML=full?'<span>🔒</span> SQUAD FULL':'<span>⚡</span><span class="ball-roll">⚽</span> JOIN THE BATTLE';
+      }
+      if(loginBtn) loginBtn.style.display = (full||drawDone) ? 'inline-flex' : 'none';
     }
     if (!document.getElementById('page-dashboard').classList.contains('hidden')) this.renderDashboard();
     if (!document.getElementById('page-bracket').classList.contains('hidden')) this.renderBracket();
