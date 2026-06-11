@@ -43,10 +43,12 @@ POLL_INTERVAL = int(os.getenv("BRACKET_POLL_SECONDS", "180"))  # 3 min default
 # ---------------------------------------------------------------------------
 
 TIERS = {
-    "tier1": ["France","Spain","Argentina","England","Portugal","Brazil","Germany","Netherlands","Belgium","Morocco","Uruguay","Colombia"],
-    "tier2": ["Croatia","Japan","Senegal","Switzerland","USA","Mexico","Norway","Sweden","Austria","Turkey","Ecuador","South Korea"],
-    "tier3": ["Iran","Australia","Egypt","Ivory Coast","Scotland","Bosnia and Herzegovina","Czechia","Algeria","Tunisia","Ghana","South Africa","DR Congo"],
-    "tier4": ["Paraguay","Canada","Panama","Uzbekistan","Qatar","Iraq","Saudi Arabia","Jordan","Cape Verde","New Zealand","Curaçao","Haiti"],
+    # Each WC2026 group is spread exactly one team per tier — no same-group collision.
+    # Verified against all 12 groups (Groups A–L) on 2026-06-10.
+    "tier1": ["France","Spain","Argentina","England","Portugal","Brazil","Germany","Netherlands","Belgium","USA","Switzerland","Mexico"],
+    "tier2": ["Croatia","Japan","Senegal","Morocco","Austria","Turkey","Ecuador","South Korea","Uruguay","Colombia","Canada","Egypt"],
+    "tier3": ["Iran","Australia","Norway","Ivory Coast","Scotland","Bosnia and Herzegovina","Czechia","Algeria","Tunisia","Ghana","Saudi Arabia","DR Congo"],
+    "tier4": ["Paraguay","Sweden","Panama","Uzbekistan","Qatar","Iraq","South Africa","Jordan","Cape Verde","New Zealand","Curaçao","Haiti"],
 }
 
 AVATAR_COLORS = ["#00ff41","#00d4ff","#ffd700","#cc44ff","#ff8800","#ff2244","#00ff88","#ff44cc",
@@ -181,6 +183,14 @@ def db_reset():
         conn.execute("UPDATE tournament SET value='0' WHERE key='draw_done'")
         conn.execute("UPDATE tournament SET value='' WHERE key IN ('finalist_1','finalist_2','champion')")
         conn.execute("UPDATE tournament SET value='' WHERE key='bracket'")
+        conn.commit()
+
+
+def db_reset_draw_only():
+    """Clear squads + draw flag, keep player registrations intact."""
+    with get_db() as conn:
+        conn.execute("DELETE FROM squads")
+        conn.execute("UPDATE tournament SET value='0' WHERE key='draw_done'")
         conn.commit()
 
 # ---------------------------------------------------------------------------
@@ -510,6 +520,17 @@ async def api_reset(req: HostRequest):
     state = full_state()
     await ws_manager.broadcast({"type": "state_update", **state})
     return {"ok": True}
+
+
+@app.post("/api/reset-draw")
+async def api_reset_draw(req: HostRequest):
+    """Undo only the draw — keeps all player registrations intact."""
+    if req.password != HOST_PASSWORD:
+        raise HTTPException(403, "Wrong password")
+    db_reset_draw_only()
+    state = full_state()
+    await ws_manager.broadcast({"type": "state_update", **state})
+    return {"ok": True, "players": len(state.get("players", []))}
 
 
 @app.post("/api/set-finalists")
