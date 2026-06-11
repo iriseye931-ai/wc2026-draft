@@ -586,6 +586,11 @@ body,h1,h2,h3,p{margin:0;padding:0}
       <div class="text-6xl mb-2" id="squad-initial"></div>
       <h2 class="text-4xl bebas glow-gold" style="color:var(--gold)" id="squad-player-name"></h2>
       <div class="text-sm mt-1" style="color:#5a8aaa">4 NATIONS · WORLD CUP 2026</div>
+      <div id="profile-edit-wrap" class="hidden mt-4"></div>
+      <button id="btn-edit-profile" class="hidden mt-3" onclick="App.openProfileEditor()"
+        style="font-size:.75rem;padding:.35rem 1.1rem;background:rgba(0,255,65,.08);border:1px solid rgba(0,255,65,.3);color:#00ff41;cursor:pointer;letter-spacing:.1em;font-family:inherit;border-radius:3px">
+        ✏️ EDIT PROFILE
+      </button>
       <div id="squad-finalist-banner" class="hidden mt-3 px-4 py-2 rounded" style="background:#0d1a0d;border:1px solid var(--neon)66;font-family:'Bebas Neue',Impact,sans-serif;letter-spacing:.08em"></div>
       <div id="squad-score-badge" class="mt-3 hidden" style="display:inline-flex;flex-direction:column;align-items:center;gap:4px">
         <div style="font-family:'Bebas Neue',Impact,sans-serif;font-size:.65rem;letter-spacing:.18em;color:#3a5a70">SQUAD RATING</div>
@@ -1417,6 +1422,11 @@ const App = {
     document.getElementById('squad-page-title').textContent = isMySquad ? 'MY SQUAD' : `${player.name.toUpperCase()}'S SQUAD`;
     document.getElementById('squad-player-name').textContent=player.name;
     document.getElementById('squad-initial').textContent=player.avatar_initial;
+    // Show edit button only for the logged-in player's own squad
+    const editBtn = document.getElementById('btn-edit-profile');
+    const editWrap = document.getElementById('profile-edit-wrap');
+    if (editBtn) editBtn.style.display = isMySquad ? '' : 'none';
+    if (editWrap) { editWrap.innerHTML = ''; editWrap.classList.add('hidden'); }
 
     // Finalist/champion banner on squad page
     const fb = document.getElementById('squad-finalist-banner');
@@ -1907,6 +1917,143 @@ document.body.appendChild(sb);
   }
   tick(); setInterval(tick,1000);
 })();
+
+/* ── Profile editor ── */
+const TEAM_FLAGS = {
+  // Tier 1
+  'France':'🇫🇷','Spain':'🇪🇸','Argentina':'🇦🇷','England':'🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+  'Portugal':'🇵🇹','Brazil':'🇧🇷','Germany':'🇩🇪','Netherlands':'🇳🇱',
+  'Belgium':'🇧🇪','Morocco':'🇲🇦','Uruguay':'🇺🇾','Colombia':'🇨🇴',
+  // Tier 2
+  'Croatia':'🇭🇷','Japan':'🇯🇵','Senegal':'🇸🇳','Switzerland':'🇨🇭',
+  'USA':'🇺🇸','Mexico':'🇲🇽','Norway':'🇳🇴','Sweden':'🇸🇪',
+  'Austria':'🇦🇹','Turkey':'🇹🇷','Ecuador':'🇪🇨','South Korea':'🇰🇷',
+  // Tier 3
+  'Iran':'🇮🇷','Australia':'🇦🇺','Egypt':'🇪🇬','Ivory Coast':'🇨🇮',
+  'Scotland':'🏴󠁧󠁢󠁳󠁣󠁴󠁿','Bosnia and Herzegovina':'🇧🇦','Czechia':'🇨🇿',
+  'Algeria':'🇩🇿','Tunisia':'🇹🇳','Ghana':'🇬🇭','South Africa':'🇿🇦','DR Congo':'🇨🇩',
+  // Tier 4
+  'Paraguay':'🇵🇾','Canada':'🇨🇦','Panama':'🇵🇦','Uzbekistan':'🇺🇿',
+  'Qatar':'🇶🇦','Iraq':'🇮🇶','Saudi Arabia':'🇸🇦','Jordan':'🇯🇴',
+  'Cape Verde':'🇨🇻','New Zealand':'🇳🇿','Curaçao':'🇨🇼','Haiti':'🇭🇹',
+};
+const TEAM_COLORS = {
+  'France':'#002395','Spain':'#aa151b','Argentina':'#74acdf','England':'#ce1126',
+  'Portugal':'#006600','Brazil':'#009c3b','Germany':'#888888','Netherlands':'#ff6600',
+  'Belgium':'#ef3340','Morocco':'#c1272d','Uruguay':'#5eb6e4','Colombia':'#fcd116',
+  'Croatia':'#ff0000','Japan':'#bc002d','Senegal':'#00853f','Switzerland':'#ff0000',
+  'USA':'#3c3b6e','Mexico':'#006847','Norway':'#ef2b2d','Sweden':'#006aa7',
+  'Austria':'#ed2939','Turkey':'#e30a17','Ecuador':'#ffd100','South Korea':'#003478',
+  'Iran':'#239f40','Australia':'#00843d','Egypt':'#ce1126','Ivory Coast':'#f77f00',
+  'Scotland':'#003399','Bosnia and Herzegovina':'#002395','Czechia':'#d7141a',
+  'Algeria':'#006233','Tunisia':'#e70013','Ghana':'#006b3f','South Africa':'#007a4d',
+  'DR Congo':'#007fff','Paraguay':'#d52b1e','Canada':'#ff0000','Panama':'#da121a',
+  'Uzbekistan':'#1eb53a','Qatar':'#8d1b3d','Iraq':'#007a3d','Saudi Arabia':'#006c35',
+  'Jordan':'#007a3d','Cape Verde':'#003893','New Zealand':'#00247d','Curaçao':'#003da5',
+  'Haiti':'#00209f',
+};
+
+Object.assign(App, {
+  openProfileEditor() {
+    const cp = this.currentPlayer;
+    const sq = this._state.squads?.[cp?.id] || {};
+    const teams = [sq.tier1, sq.tier2, sq.tier3, sq.tier4].filter(Boolean);
+    const wrap = document.getElementById('profile-edit-wrap');
+    wrap.innerHTML = `
+      <div style="background:rgba(0,20,10,.85);border:1px solid rgba(0,255,65,.25);border-radius:6px;padding:16px;max-width:360px;margin:0 auto;text-align:left">
+        <div style="font-size:.7rem;letter-spacing:.16em;color:#4a7a5a;margin-bottom:10px;text-transform:uppercase">Edit Profile</div>
+        <input id="profile-name-input" type="text" maxlength="40" value="${cp.name}"
+          style="width:100%;padding:8px 10px;background:rgba(255,255,255,.04);border:1px solid rgba(0,255,65,.25);color:#c0ffc0;font-size:.9rem;border-radius:4px;font-family:inherit;box-sizing:border-box;margin-bottom:12px"
+          placeholder="Your display name" />
+        <div style="font-size:.68rem;letter-spacing:.12em;color:#4a7a5a;text-transform:uppercase;margin-bottom:8px">Pick your badge:</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+          ${teams.map(t => `
+            <button onclick="App.selectTeamBadge('${t}', this)"
+              style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:6px;cursor:pointer;transition:all .2s;font-family:inherit"
+              data-team="${t}">
+              <span style="font-size:1.8rem;line-height:1">${TEAM_FLAGS[t]||'🏳️'}</span>
+              <span style="font-size:.6rem;letter-spacing:.08em;color:#7aaa8a;text-transform:uppercase">${t}</span>
+            </button>`).join('')}
+          <button onclick="App.selectTeamBadge(null, this)"
+            style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:6px;cursor:pointer;font-family:inherit"
+            data-team="">
+            <span style="font-size:1.8rem;line-height:1">✏️</span>
+            <span style="font-size:.6rem;letter-spacing:.08em;color:#7aaa8a;text-transform:uppercase">Keep</span>
+          </button>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button onclick="App.saveProfile()"
+            style="flex:1;padding:8px;background:rgba(0,255,65,.15);border:1px solid rgba(0,255,65,.4);color:#00ff41;font-weight:700;font-size:.8rem;cursor:pointer;border-radius:4px;font-family:inherit;letter-spacing:.08em">
+            SAVE
+          </button>
+          <button onclick="App.closeProfileEditor()"
+            style="padding:8px 14px;background:transparent;border:1px solid rgba(255,255,255,.1);color:#4a6a5a;font-size:.8rem;cursor:pointer;border-radius:4px;font-family:inherit">
+            ✕
+          </button>
+        </div>
+        <div id="profile-edit-err" style="color:#ff5577;font-size:.72rem;margin-top:6px;display:none"></div>
+      </div>`;
+    wrap.classList.remove('hidden');
+    document.getElementById('btn-edit-profile').style.display = 'none';
+    this._pendingBadge = null;
+  },
+
+  selectTeamBadge(team, btn) {
+    document.querySelectorAll('#profile-edit-wrap button[data-team]').forEach(b => {
+      b.style.border = '1px solid rgba(255,255,255,.1)';
+      b.style.background = 'rgba(255,255,255,.04)';
+    });
+    btn.style.border = '1px solid #00ff41';
+    btn.style.background = 'rgba(0,255,65,.1)';
+    this._pendingBadge = team || null;
+  },
+
+  async saveProfile() {
+    const cp = this.currentPlayer;
+    const nameEl = document.getElementById('profile-name-input');
+    const errEl = document.getElementById('profile-edit-err');
+    const name = nameEl?.value?.trim();
+    if (!name) { errEl.textContent = 'Name cannot be empty'; errEl.style.display='block'; return; }
+    const payload = { email: cp.email, name };
+    if (this._pendingBadge) {
+      payload.avatar_initial = TEAM_FLAGS[this._pendingBadge] || cp.avatar_initial;
+      payload.avatar_color = TEAM_COLORS[this._pendingBadge] || cp.avatar_color;
+    }
+    try {
+      const r = await fetch('/api/update-profile', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(payload),
+      });
+      const d = await r.json();
+      if (!r.ok) { errEl.textContent = d.detail || 'Failed'; errEl.style.display='block'; return; }
+      // Update local player reference
+      if (d.player) {
+        this.currentPlayer = { ...cp, ...d.player };
+        // Update chat session too
+        try {
+          const chatData = JSON.parse(localStorage.getItem('wc2026_chat_player')||'{}');
+          if (chatData.id === cp.id) {
+            const updated = { ...chatData, name: d.player.name, avatar_color: d.player.avatar_color };
+            localStorage.setItem('wc2026_chat_player', JSON.stringify(updated));
+          }
+        } catch {}
+      }
+      this.closeProfileEditor();
+      // Re-render squad page header
+      document.getElementById('squad-player-name').textContent = this.currentPlayer.name;
+      document.getElementById('squad-initial').textContent = this.currentPlayer.avatar_initial;
+      toast(`✅ Profile updated!`);
+    } catch { errEl.textContent = 'Connection error'; errEl.style.display='block'; }
+  },
+
+  closeProfileEditor() {
+    const wrap = document.getElementById('profile-edit-wrap');
+    if (wrap) { wrap.innerHTML = ''; wrap.classList.add('hidden'); }
+    const btn = document.getElementById('btn-edit-profile');
+    if (btn) btn.style.display = '';
+    this._pendingBadge = null;
+  },
+});
 
 /* ── Service Worker registration ── */
 if ('serviceWorker' in navigator) {

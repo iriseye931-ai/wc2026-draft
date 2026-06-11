@@ -441,6 +441,32 @@ app.add_middleware(
 # Request models
 # ---------------------------------------------------------------------------
 
+class UpdateProfileRequest(BaseModel):
+    email: str
+    name: str | None = None
+    avatar_initial: str | None = None
+    avatar_color: str | None = None
+
+    @field_validator("name")
+    @classmethod
+    def _chk_name(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        v = v.strip()
+        if not v or len(v) > 40:
+            raise ValueError("name must be 1–40 chars")
+        return v
+
+    @field_validator("avatar_color")
+    @classmethod
+    def _chk_color(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        import re
+        if not re.match(r'^#[0-9a-fA-F]{6}$', v.strip()):
+            raise ValueError("avatar_color must be a hex color")
+        return v.strip()
+
 class RegisterRequest(BaseModel):
     name: str
     email: str
@@ -780,6 +806,41 @@ def api_health():
 class ChatSendRequest(BaseModel):
     email: str
     message: str
+
+@app.post("/api/update-profile")
+async def api_update_profile(req: UpdateProfileRequest):
+    """Let a registered player update their display name and/or avatar."""
+    email = req.email.strip().lower()
+    players = db_get_players()
+    player = next((p for p in players if p["email"] == email), None)
+    if not player:
+        raise HTTPException(403, "Not a registered player")
+
+    updates: list[str] = []
+    values: list = []
+    if req.name is not None:
+        updates.append("name = ?")
+        values.append(req.name)
+    if req.avatar_initial is not None:
+        updates.append("avatar_initial = ?")
+        values.append(req.avatar_initial)
+    if req.avatar_color is not None:
+        updates.append("avatar_color = ?")
+        values.append(req.avatar_color)
+
+    if not updates:
+        raise HTTPException(400, "Nothing to update")
+
+    values.append(player["id"])
+    with get_db() as conn:
+        conn.execute(f"UPDATE players SET {', '.join(updates)} WHERE id = ?", values)
+        conn.commit()
+
+    state = full_state()
+    await ws_manager.broadcast({"type": "state_update", **state})
+    updated = next((p for p in state.get("players", []) if p["id"] == player["id"]), None)
+    return {"ok": True, "player": updated}
+
 
 @app.get("/api/chat")
 def api_chat_get(limit: int = 50):
