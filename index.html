@@ -1324,7 +1324,7 @@ const App = {
           <div style="display:flex;align-items:center;gap:16px;margin-bottom:22px;position:relative">
             <div style="width:68px;height:68px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',Impact,sans-serif;font-size:1.8rem;flex-shrink:0;background:${cp.avatar_color}1a;border:3px solid ${cp.avatar_color};color:${cp.avatar_color};box-shadow:0 0 20px ${cp.avatar_color}55,inset 0 0 20px ${cp.avatar_color}0a">${cp.avatar_initial}</div>
             <div style="flex:1;min-width:0">
-              <div style="font-family:'Bebas Neue',Impact,sans-serif;font-size:2.2rem;line-height:.95;color:#fff;letter-spacing:.04em;text-shadow:0 0 30px ${cp.avatar_color}88">${cp.name}</div>
+              <div style="font-family:'Bebas Neue',Impact,sans-serif;font-size:2.2rem;line-height:.95;color:#fff;letter-spacing:.04em;text-shadow:0 0 30px ${cp.avatar_color}88">${cp.name}${mySquad?.tier1?`<span style="font-size:1.1rem;color:${cp.avatar_color};opacity:.75;margin-left:8px">(${mySquad.tier1})</span>`:''}</div>
               <div style="display:flex;align-items:center;gap:10px;margin-top:5px;flex-wrap:wrap">
                 <span style="font-family:'Bebas Neue',Impact,sans-serif;font-size:.85rem;letter-spacing:.12em;color:${aliveColor}">${alive}/4 TEAMS ALIVE</span>
                 <span style="font-size:.65rem;color:#3a5a70;letter-spacing:.1em">· WC 2026</span>
@@ -1373,7 +1373,7 @@ const App = {
         <div class="flex items-center gap-3">
           <div class="avatar" style="background:${p.avatar_color}22;border-color:${p.avatar_color};color:${p.avatar_color}">${p.avatar_initial}</div>
           <div class="flex-1 min-w-0">
-            <div class="font-bold text-base truncate" style="color:#e2e8f0">${p.name}</div>
+            <div class="font-bold text-base truncate" style="color:#e2e8f0">${p.name}${squad?.tier1?` <span style="font-size:.75rem;color:#5a8aaa;font-weight:400">(${squad.tier1})</span>`:''}</div>
             ${this._hostVerified?`<div class="text-xs" style="color:#3a5a70">${p.email}</div>`:''}
             ${rating?`<div style="font-family:'Bebas Neue',Impact,sans-serif;font-size:.7rem;letter-spacing:.08em;color:${rating.color};margin-top:2px">${rating.label} · ${score}/${MAX_SQUAD_SCORE}</div>`:''}
             ${aliveHtml}
@@ -1408,7 +1408,7 @@ const App = {
           <div style="font-family:'Bebas Neue',Impact,sans-serif;font-size:1.1rem;color:#3a5a70;width:20px;text-align:center;flex-shrink:0">${medals[i]||`#${i+1}`}</div>
           <div class="avatar" style="width:32px;height:32px;font-size:.9rem;background:${p.avatar_color}22;border-color:${p.avatar_color};color:${p.avatar_color}">${p.avatar_initial}</div>
           <div class="flex-1 min-w-0">
-            <div class="font-bold text-sm truncate" style="color:${isMe?'var(--neon)':'#e2e8f0'}">${p.name}${isMe?' <span style="font-size:.6rem;color:var(--neon)44">(YOU)</span>':''}</div>
+            <div class="font-bold text-sm truncate" style="color:${isMe?'var(--neon)':'#e2e8f0'}">${p.name}${squads[p.id]?.tier1?` <span style="font-size:.65rem;color:#5a8aaa;font-weight:400">(${squads[p.id].tier1})</span>`:''}${isMe?' <span style="font-size:.6rem;color:var(--neon)44">(YOU)</span>':''}</div>
             <div style="height:4px;background:#0a1418;border-radius:2px;overflow:hidden;margin-top:4px;width:100%">
               <div style="height:100%;width:${pct}%;background:${rating.color};border-radius:2px;transition:width .8s cubic-bezier(.2,.8,.4,1);box-shadow:0 0 6px ${rating.color}88"></div>
             </div>
