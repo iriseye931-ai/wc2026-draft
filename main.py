@@ -566,6 +566,37 @@ async def api_reset(req: HostRequest):
     return {"ok": True}
 
 
+class SetSquadRequest(BaseModel):
+    password: str
+    email: str
+    tier1: str
+    tier2: str
+    tier3: str
+    tier4: str
+
+@app.post("/api/set-squad")
+async def api_set_squad(req: SetSquadRequest):
+    """Host-only: manually assign a player's squad (restores draw without re-randomising)."""
+    if req.password != HOST_PASSWORD:
+        raise HTTPException(403, "Wrong password")
+    players = db_get_players()
+    player = next((p for p in players if p["email"] == req.email.strip().lower()), None)
+    if not player:
+        raise HTTPException(404, "Player not found")
+    squad = {"tier1": req.tier1, "tier2": req.tier2, "tier3": req.tier3, "tier4": req.tier4}
+    with get_db() as conn:
+        conn.execute(
+            "INSERT OR REPLACE INTO squads (player_id, squad_json) VALUES (?,?)",
+            (player["id"], json.dumps(squad))
+        )
+        # Mark draw as done once at least one squad is set
+        conn.execute("UPDATE tournament SET value='1' WHERE key='draw_done'")
+        conn.commit()
+    state = full_state()
+    await ws_manager.broadcast({"type": "state_update", **state})
+    return {"ok": True, "player": player["name"], "squad": squad}
+
+
 @app.post("/api/reset-draw")
 async def api_reset_draw(req: HostRequest):
     """Undo only the draw — keeps all player registrations intact."""
