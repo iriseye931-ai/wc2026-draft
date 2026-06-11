@@ -43,12 +43,10 @@ POLL_INTERVAL = int(os.getenv("BRACKET_POLL_SECONDS", "180"))  # 3 min default
 # ---------------------------------------------------------------------------
 
 TIERS = {
-    # Each WC2026 group is spread exactly one team per tier — no same-group collision.
-    # Verified against all 12 groups (Groups A–L) on 2026-06-10.
-    "tier1": ["France","Spain","Argentina","England","Portugal","Brazil","Germany","Netherlands","Belgium","USA","Switzerland","Mexico"],
-    "tier2": ["Croatia","Japan","Senegal","Morocco","Austria","Turkey","Ecuador","South Korea","Uruguay","Colombia","Canada","Egypt"],
-    "tier3": ["Iran","Australia","Norway","Ivory Coast","Scotland","Bosnia and Herzegovina","Czechia","Algeria","Tunisia","Ghana","Saudi Arabia","DR Congo"],
-    "tier4": ["Paraguay","Sweden","Panama","Uzbekistan","Qatar","Iraq","South Africa","Jordan","Cape Verde","New Zealand","Curaçao","Haiti"],
+    "tier1": ["France","Spain","Argentina","England","Portugal","Brazil","Germany","Netherlands","Belgium","Morocco","Uruguay","Colombia"],
+    "tier2": ["Croatia","Japan","Senegal","Switzerland","USA","Mexico","Norway","Sweden","Austria","Turkey","Ecuador","South Korea"],
+    "tier3": ["Iran","Australia","Egypt","Ivory Coast","Scotland","Bosnia and Herzegovina","Czechia","Algeria","Tunisia","Ghana","South Africa","DR Congo"],
+    "tier4": ["Paraguay","Canada","Panama","Uzbekistan","Qatar","Iraq","Saudi Arabia","Jordan","Cape Verde","New Zealand","Curaçao","Haiti"],
 }
 
 AVATAR_COLORS = ["#00ff41","#00d4ff","#ffd700","#cc44ff","#ff8800","#ff2244","#00ff88","#ff44cc",
@@ -81,6 +79,14 @@ def init_db():
             CREATE TABLE IF NOT EXISTS tournament (
                 key TEXT PRIMARY KEY,
                 value TEXT
+            );
+            CREATE TABLE IF NOT EXISTS chat (
+                id TEXT PRIMARY KEY,
+                player_id TEXT NOT NULL,
+                player_name TEXT NOT NULL,
+                avatar_color TEXT NOT NULL,
+                message TEXT NOT NULL,
+                sent_at TEXT NOT NULL
             );
         """)
         conn.execute("INSERT OR IGNORE INTO tournament VALUES ('draw_done', '0')")
@@ -371,6 +377,44 @@ async def _poll_loop():
                 log.info("Bracket auto-updated from live data")
         except Exception as exc:
             log.warning("Bracket poll failed: %s", exc)
+
+# ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Chat helpers
+# ---------------------------------------------------------------------------
+
+CHAT_MAX_MESSAGES = 100
+CHAT_MESSAGE_MAX_LEN = 280
+
+def db_get_chat(limit: int = 50) -> list:
+    with get_db() as conn:
+        rows = conn.execute(
+            "SELECT * FROM chat ORDER BY sent_at DESC LIMIT ?", (limit,)
+        ).fetchall()
+    return list(reversed([dict(r) for r in rows]))
+
+def db_add_chat(player_id: str, player_name: str, avatar_color: str, message: str) -> dict:
+    record = {
+        "id": str(uuid.uuid4()),
+        "player_id": player_id,
+        "player_name": player_name,
+        "avatar_color": avatar_color,
+        "message": message,
+        "sent_at": datetime.utcnow().isoformat(),
+    }
+    with get_db() as conn:
+        conn.execute(
+            "INSERT INTO chat (id,player_id,player_name,avatar_color,message,sent_at) VALUES (?,?,?,?,?,?)",
+            (record["id"], record["player_id"], record["player_name"],
+             record["avatar_color"], record["message"], record["sent_at"]),
+        )
+        # Keep only last CHAT_MAX_MESSAGES rows
+        conn.execute(
+            "DELETE FROM chat WHERE id NOT IN (SELECT id FROM chat ORDER BY sent_at DESC LIMIT ?)",
+            (CHAT_MAX_MESSAGES,),
+        )
+        conn.commit()
+    return record
 
 # ---------------------------------------------------------------------------
 # App lifespan
@@ -697,6 +741,35 @@ def api_health():
         "live_sync": bool(FD_API_KEY),
         "poll_interval_s": POLL_INTERVAL if FD_API_KEY else None,
     }
+
+# ---------------------------------------------------------------------------
+# Chat endpoints
+# ---------------------------------------------------------------------------
+
+class ChatSendRequest(BaseModel):
+    email: str
+    message: str
+
+@app.get("/api/chat")
+def api_chat_get(limit: int = 50):
+    bounded = max(1, min(limit, 100))
+    return {"messages": db_get_chat(bounded)}
+
+@app.post("/api/chat")
+async def api_chat_post(req: ChatSendRequest):
+    email = req.email.strip().lower()
+    message = req.message.strip()
+    if not message:
+        raise HTTPException(400, "Message cannot be empty")
+    if len(message) > CHAT_MESSAGE_MAX_LEN:
+        raise HTTPException(400, f"Message too long (max {CHAT_MESSAGE_MAX_LEN} chars)")
+    players = db_get_players()
+    player = next((p for p in players if p["email"] == email), None)
+    if not player:
+        raise HTTPException(403, "Only registered players can chat")
+    record = db_add_chat(player["id"], player["name"], player["avatar_color"] or "#00ff41", message)
+    await ws_manager.broadcast({"type": "chat_message", "message": record})
+    return {"ok": True, "message": record}
 
 # ---------------------------------------------------------------------------
 # WebSocket
