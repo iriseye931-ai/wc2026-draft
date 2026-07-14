@@ -764,7 +764,14 @@ function getTeamStatus(team, bracket, champion) {
       if (m.home === team || m.away === team) lastSeen = {round:rk, match:m};
     }
   }
-  if (!lastSeen) return {stage:'group', label:'GROUP STAGE', color:'#5a8aaa'};
+  if (!lastSeen) {
+    // Once the knockouts are underway, a team that never appears in the
+    // bracket is out (lost in the round of 32 or didn't qualify) — not
+    // "group stage". Only show GROUP STAGE before any knockout result exists.
+    const knockoutsStarted = rounds.some(rk => (bracket[rk]||[]).some(m => m.home || m.away || m.winner));
+    if (knockoutsStarted) return {stage:'eliminated', label:'ELIMINATED', color:'#ff2244'};
+    return {stage:'group', label:'GROUP STAGE', color:'#5a8aaa'};
+  }
   const {round, match} = lastSeen;
   if (match.winner) {
     if (match.winner === team) {
