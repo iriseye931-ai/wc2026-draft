@@ -363,6 +363,25 @@ body,h1,h2,h3,p{margin:0;padding:0}
     .bk-line-wrap { flex:1; display:flex; flex-direction:column; }
     .bk-horiz { height:1px; background:#1e3040; }
     .bk-vert { width:1px; background:#1e3040; flex:1; margin-left:auto; }
+
+    /* ── Champion takeover (landing) ── */
+    .champs-glow { display:block; font-size:44%; letter-spacing:.12em;
+      background:linear-gradient(90deg,#aa151b,#f1bf00,#fff8c0,#f1bf00,#aa151b);
+      background-size:200% auto; -webkit-background-clip:text; background-clip:text;
+      -webkit-text-fill-color:transparent; animation:champShimmer 3s linear infinite; }
+    @keyframes champShimmer { to { background-position:200% center; } }
+    .champ-flag-wave { display:inline-block; animation:champWave 2.2s ease-in-out infinite; transform-origin:bottom center;
+      background:none; -webkit-background-clip:border-box; background-clip:border-box; -webkit-text-fill-color:initial; }
+    @keyframes champWave { 0%,100%{transform:rotate(-8deg)} 50%{transform:rotate(8deg)} }
+    .champ-owner-chip { display:inline-block; font-family:'Bebas Neue',Impact,sans-serif;
+      font-size:clamp(1.1rem,2.8vw,1.7rem); letter-spacing:.14em; color:var(--gold);
+      background:linear-gradient(135deg,#1a1400,#241a00); border:2px solid var(--gold);
+      border-radius:8px; padding:.55rem 1.5rem;
+      box-shadow:0 0 18px #ffd70055, inset 0 0 12px #ffd70022;
+      animation:champPulse 2s ease-in-out infinite; }
+    @keyframes champPulse { 0%,100%{box-shadow:0 0 14px #ffd70044, inset 0 0 10px #ffd70022}
+      50%{box-shadow:0 0 34px #ffd700aa, inset 0 0 16px #ffd70044} }
+    .champ-scoreline { margin-top:8px; font-size:.8rem; letter-spacing:.14em; text-transform:uppercase; color:#7a9ab8; }
   </style>
 </head>
 <body class="scanline-wrap">
@@ -431,6 +450,7 @@ body,h1,h2,h3,p{margin:0;padding:0}
       <div id="landing-meta" class="text-sm tracking-widest uppercase" style="color:var(--blue);margin-bottom:4px">⚡ Private Tournament · 12 Players · Fair Draw</div>
       <h1 class="hero-title bebas" style="font-size:clamp(2.2rem,7vw,7rem)">WORLD CUP<br>2026<br><span id="landing-draft-label" class="draft-glow" style="font-size:60%">PRIVATE DRAFT</span></h1>
     </div>
+    <div id="landing-champion-owner" class="hidden" style="flex-shrink:0"></div>
     <div style="flex-shrink:0">
       <p class="text-base max-w-md mx-auto" style="color:#7a9ab8">48 nations. 4 tiers. One champion. Every squad decided by fate.</p>
       <div class="host-nations" style="margin-top:6px">
@@ -1012,6 +1032,7 @@ const App = {
       }
       if(loginBtn) loginBtn.style.display = (full||drawDone) ? 'inline-flex' : 'none';
     }
+    this.renderChampionTakeover(metaEl);
     if (!document.getElementById('page-dashboard').classList.contains('hidden')) this.renderDashboard();
     if (!document.getElementById('page-bracket').classList.contains('hidden')) this.renderBracket();
     if (!document.getElementById('page-squad').classList.contains('hidden') && this._squadViewId) {
@@ -1035,6 +1056,43 @@ const App = {
     if (type === 'champion_set') {
       toast(`🏆 ${this._state.champion.toUpperCase()} ARE WORLD CHAMPIONS!`, 9000);
       Confetti.burst();
+    }
+  },
+
+  renderChampionTakeover(metaEl) {
+    const champ = this._state.champion;
+    if (!champ) return;
+    const flag = FLAGS[champ] || '🏆';
+    const runnerUp = [this._state.finalist_1, this._state.finalist_2].find(t => t && t !== champ) || '';
+    let ownerName = '';
+    for (const [pid, sq] of Object.entries(this._state.squads || {})) {
+      if (Object.values(sq).includes(champ)) {
+        const p = this._state.players.find(pl => pl.id === pid);
+        ownerName = p ? p.name : '';
+        break;
+      }
+    }
+    if (metaEl) { metaEl.style.display=''; metaEl.textContent='🏆 World Cup 2026 · Final Result'; metaEl.style.color='var(--gold)'; }
+    const h1 = document.querySelector('#page-landing .hero-title');
+    if (h1) {
+      const cry = champ === 'Spain' ? '¡CAMPEONES DEL MUNDO!' : 'WORLD CHAMPIONS!';
+      h1.innerHTML = `<span class="champ-flag-wave">${flag}</span> ${champ.toUpperCase()}<br><span class="champs-glow">${cry}</span>`;
+    }
+    const tag = document.querySelector('#page-landing p');
+    if (tag) tag.innerHTML = `48 nations. One crown. <b style="color:var(--gold)">${champ} took it home.</b>`;
+    const ownerEl = document.getElementById('landing-champion-owner');
+    if (ownerEl) {
+      ownerEl.classList.remove('hidden');
+      ownerEl.innerHTML =
+        `<div class="champ-owner-chip">👑 ${ownerName ? ownerName.toUpperCase() + ' WINS THE $250 CROWN' : 'CHAMPIONS CROWNED'} 👑</div>` +
+        (runnerUp ? `<div class="champ-scoreline">beat ${FLAGS[runnerUp]||''} ${runnerUp} in the final</div>` : '');
+    }
+    const cd = document.getElementById('wc-countdown');
+    if (cd) { if (cd.nextElementSibling) cd.nextElementSibling.remove(); cd.remove(); }
+    if (!this._champCelebrated) {
+      this._champCelebrated = true;
+      Confetti.burst();
+      setTimeout(() => Confetti.burst(), 1500);
     }
   },
 
